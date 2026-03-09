@@ -39,7 +39,7 @@ export default function Home() {
       <section className="heroBanner">
         <div className="heroInner">
           <div className="heroKicker">
-            LIVE ARB FEED • STAKE SPLITS • FAST EXECUTION
+            LIVE FEED • STAKE SPLITS • FAST EXECUTION
           </div>
 
           <div className="heroBrand">HitBet</div>
