@@ -1,11 +1,12 @@
 import Link from "next/link";
 
-export default function BillingReturnPage({
+export default async function BillingReturnPage({
   searchParams,
 }: {
-  searchParams: { session_id?: string };
+  searchParams: Promise<{ session_id?: string }>;
 }) {
-  const sessionId = searchParams.session_id;
+  const params = await searchParams;
+  const sessionId = params?.session_id;
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 16px" }}>
