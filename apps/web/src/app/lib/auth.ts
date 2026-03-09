@@ -3,7 +3,7 @@ import PostgresAdapter from "@auth/pg-adapter";
 import Resend from "next-auth/providers/resend";
 import { pool } from "./db";
 
-export const { handlers, auth } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   adapter: PostgresAdapter(pool),
   providers: [
