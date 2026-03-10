@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import {
@@ -9,10 +9,10 @@ import {
 } from "@stripe/react-stripe-js";
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
 );
 
-export default function BillingCheckoutPage() {
+function CheckoutInner() {
   const params = useSearchParams();
   const plan = (params.get("plan") || "pro") as "pro" | "elite";
 
@@ -22,36 +22,47 @@ export default function BillingCheckoutPage() {
   useEffect(() => {
     let cancelled = false;
 
-    async function go() {
-      setErr(null);
-      setClientSecret(null);
+    async function startCheckout() {
+      try {
+        setErr(null);
+        setClientSecret(null);
 
-      const res = await fetch("/api/stripe/embedded-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
+        const res = await fetch("/api/stripe/embedded-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan }),
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (!res.ok) {
-        if (!cancelled) setErr(data?.error || "Failed to start checkout");
-        return;
+        if (!res.ok) {
+          if (!cancelled) {
+            setErr(data?.error || "Failed to start checkout");
+          }
+          return;
+        }
+
+        if (!cancelled) {
+          setClientSecret(data.clientSecret);
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setErr(e?.message || "Something went wrong");
+        }
       }
-
-      if (!cancelled) setClientSecret(data.clientSecret);
     }
 
-    go();
+    startCheckout();
+
     return () => {
       cancelled = true;
     };
   }, [plan]);
 
-  const options = useMemo(
-    () => (clientSecret ? { clientSecret } : undefined),
-    [clientSecret]
-  );
+  const options = useMemo(() => {
+    if (!clientSecret) return undefined;
+    return { clientSecret };
+  }, [clientSecret]);
 
   return (
     <div style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 16px" }}>
@@ -61,7 +72,14 @@ export default function BillingCheckoutPage() {
       </p>
 
       {err && (
-        <div style={{ padding: 12, border: "1px solid #ff5a5a", borderRadius: 10 }}>
+        <div
+          style={{
+            padding: 12,
+            border: "1px solid #ff5a5a",
+            borderRadius: 10,
+            marginBottom: 16,
+          }}
+        >
           {err}
         </div>
       )}
@@ -74,5 +92,19 @@ export default function BillingCheckoutPage() {
         </EmbeddedCheckoutProvider>
       )}
     </div>
+  );
+}
+
+export default function BillingCheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 16px" }}>
+          Loading checkout…
+        </div>
+      }
+    >
+      <CheckoutInner />
+    </Suspense>
   );
 }
