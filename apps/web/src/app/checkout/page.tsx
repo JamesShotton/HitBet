@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import {
@@ -12,99 +12,101 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
 );
 
-type Plan = "pro" | "elite";
-
-export default function CheckoutPage() {
-  const sp = useSearchParams();
-  const plan = (sp.get("plan") || "pro") as Plan;
+function CheckoutInner() {
+  const searchParams = useSearchParams();
+  const plan = (searchParams.get("plan") || "pro") as "pro" | "elite";
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const fetchClientSecret = useMemo(() => {
-    return async () => {
-      setErr(null);
-      setClientSecret(null);
+  useEffect(() => {
+    let cancelled = false;
 
+    async function createSession() {
       try {
+        setErr(null);
+        setClientSecret(null);
+
         const res = await fetch("/api/stripe/embedded-session", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ plan }),
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-          setErr(data?.error || "Failed to start checkout.");
+          if (!cancelled) {
+            setErr(data?.error || "Failed to create checkout session.");
+          }
           return;
         }
 
-        setClientSecret(data.clientSecret);
+        if (!cancelled) {
+          setClientSecret(data.clientSecret);
+        }
       } catch (e: any) {
-        setErr(e?.message || "Network error starting checkout.");
+        if (!cancelled) {
+          setErr(e?.message || "Something went wrong.");
+        }
       }
+    }
+
+    createSession();
+
+    return () => {
+      cancelled = true;
     };
   }, [plan]);
 
-  useEffect(() => {
-    fetchClientSecret();
-  }, [fetchClientSecret]);
+  const options = useMemo(() => {
+    if (!clientSecret) return undefined;
+    return { clientSecret };
+  }, [clientSecret]);
 
   return (
-    <main style={{ minHeight: "calc(100vh - 120px)", padding: "56px 24px" }}>
-      <div style={{ width: "min(1100px, 100%)", margin: "0 auto" }}>
-        <h1 style={{ margin: 0, fontSize: 42, fontWeight: 900, letterSpacing: -0.6 }}>
-          Checkout
-        </h1>
-        <p style={{ marginTop: 10, opacity: 0.8 }}>
-          Plan: <b style={{ textTransform: "uppercase" }}>{plan}</b>
-        </p>
+    <div style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 16px" }}>
+      <h1 style={{ fontSize: 28, marginBottom: 8 }}>Checkout</h1>
+      <p style={{ opacity: 0.8, marginBottom: 24 }}>
+        Plan: <b>{plan.toUpperCase()}</b>
+      </p>
 
+      {err && (
         <div
           style={{
-            marginTop: 18,
-            borderRadius: 18,
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(10,14,20,0.55)",
-            boxShadow: "0 18px 60px rgba(0,0,0,0.35)",
-            backdropFilter: "blur(10px)",
-            padding: 18,
+            padding: 12,
+            border: "1px solid #ff5a5a",
+            borderRadius: 10,
+            marginBottom: 16,
           }}
         >
-          {err && (
-            <div
-              style={{
-                borderRadius: 14,
-                border: "1px solid rgba(255,80,80,0.35)",
-                background: "rgba(255,80,80,0.10)",
-                padding: "12px 14px",
-                marginBottom: 12,
-              }}
-            >
-              {err}
-              <div style={{ marginTop: 8, opacity: 0.8, fontSize: 13 }}>
-                If this says “Invalid API Key”, your <code>STRIPE_SECRET_KEY</code> is wrong.
-              </div>
-            </div>
-          )}
-
-          {!clientSecret && !err && (
-            <div style={{ padding: "18px 10px", opacity: 0.8 }}>
-              Loading secure checkout…
-            </div>
-          )}
-
-          {clientSecret && (
-            <EmbeddedCheckoutProvider
-              stripe={stripePromise}
-              options={{ clientSecret }}
-            >
-              <EmbeddedCheckout />
-            </EmbeddedCheckoutProvider>
-          )}
+          {err}
         </div>
-      </div>
-    </main>
+      )}
+
+      {!clientSecret && !err && <div>Loading secure checkout…</div>}
+
+      {clientSecret && options && (
+        <EmbeddedCheckoutProvider stripe={stripePromise} options={options}>
+          <EmbeddedCheckout />
+        </EmbeddedCheckoutProvider>
+      )}
+    </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 16px" }}>
+          Loading checkout…
+        </div>
+      }
+    >
+      <CheckoutInner />
+    </Suspense>
   );
 }
