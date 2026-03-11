@@ -262,7 +262,10 @@ export default function DashboardPage() {
 
                 <div style={styles.cardBottom}>
                   <div style={styles.totalStake}>
-                    Total stake: {formatMoney(arb.total_stake ?? Number(arb.leg1_stake) + Number(arb.leg2_stake))}
+                    Total stake:{" "}
+                    {formatMoney(
+                      arb.total_stake ?? Number(arb.leg1_stake) + Number(arb.leg2_stake)
+                    )}
                   </div>
                   <div style={styles.readyTag}>{demo ? "Demo feed" : "Ready to place"}</div>
                 </div>

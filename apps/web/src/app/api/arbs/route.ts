@@ -5,23 +5,23 @@ function demoArbs() {
   return [
     {
       id: "demo-1",
-      event: "Example FC vs Sample United",
-      sport_key: "demo",
+      event: "Arsenal vs Chelsea",
+      sport_key: "soccer_epl",
       market_group: "h2h",
       commence_time: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
       margin: 0.021,
       est_profit: 1.12,
       total_stake: 50,
-      leg1_name: "Example FC win",
-      leg1_book: "Bookie A",
+
+      leg1_name: "Arsenal win",
+      leg1_book: "Bet365",
       leg1_odds: 2.05,
       leg1_stake: 24.63,
-      leg1_point: null,
-      leg2_name: "Sample United win",
-      leg2_book: "Bookie B",
-      leg2_odds: 2.10,
+
+      leg2_name: "Chelsea win",
+      leg2_book: "Unibet",
+      leg2_odds: 2.1,
       leg2_stake: 25.37,
-      leg2_point: null,
     },
   ];
 }
@@ -45,7 +45,7 @@ export async function GET() {
       select status, plan
       from subscriptions
       where user_email = $1
-      order by updated_at desc nulls last
+      order by updated_at desc
       limit 1
       `,
       [session.user.email]
@@ -78,8 +78,8 @@ export async function GET() {
       plan,
       arbs: result.rows,
     });
-  } catch (error) {
-    console.error("API /api/arbs failed:", error);
+  } catch (err) {
+    console.error("API /api/arbs failed:", err);
 
     return Response.json(
       {

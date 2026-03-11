@@ -8,9 +8,7 @@ if (!DATABASE_URL) {
 
 export const pool = new Pool({
   connectionString: DATABASE_URL,
-  ssl: DATABASE_URL.includes("supabase")
-    ? { rejectUnauthorized: false }
-    : undefined,
+  ssl: { rejectUnauthorized: false },
 });
 
 export type ArbRow = {
