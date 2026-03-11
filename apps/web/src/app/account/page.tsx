@@ -26,7 +26,9 @@ export default function AccountPage() {
   if (status === "loading") {
     return (
       <div className="section">
-        <div className="card"><h3>Loading…</h3></div>
+        <div className="card">
+          <h3>Loading…</h3>
+        </div>
       </div>
     );
   }
@@ -38,41 +40,60 @@ export default function AccountPage() {
           <h3>Login required</h3>
           <p className="small">Please log in to view your account.</p>
           <div className="row" style={{ marginTop: 12 }}>
-            <button className="btn primary" onClick={() => signIn()}>Log in</button>
-            <Link className="btn" href="/pricing">Pricing</Link>
+            <button className="btn primary" onClick={() => signIn()}>
+              Log in
+            </button>
+            <Link className="btn" href="/pricing">
+              Pricing
+            </Link>
           </div>
         </div>
       </div>
     );
   }
 
-  const renewal =
-    info?.currentPeriodEnd ? new Date(info.currentPeriodEnd).toLocaleString() : "—";
+  const renewal = info?.currentPeriodEnd
+    ? new Date(info.currentPeriodEnd).toLocaleString()
+    : "—";
 
   return (
     <div className="section">
       <div className="card" style={{ maxWidth: 760 }}>
         <h3>Account</h3>
-        <p className="small">Signed in as <b>{session.user.email}</b></p>
+        <p className="small">
+          Signed in as <b>{session.user.email}</b>
+        </p>
 
         <div className="hr" />
 
-        <div className="grid3" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
-          <div className="card" style={{ background: "rgba(255,255,255,0.04)" }}>
+        <div
+          className="grid3"
+          style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
+        >
+          <div
+            className="card"
+            style={{ background: "rgba(255,255,255,0.04)" }}
+          >
             <div className="small">Plan</div>
             <div className="kpi" style={{ fontSize: 22, marginTop: 6 }}>
               {info?.isPro ? "Pro" : "Free"}
             </div>
           </div>
 
-          <div className="card" style={{ background: "rgba(255,255,255,0.04)" }}>
+          <div
+            className="card"
+            style={{ background: "rgba(255,255,255,0.04)" }}
+          >
             <div className="small">Status</div>
             <div className="kpi" style={{ fontSize: 22, marginTop: 6 }}>
               {info?.status ?? "—"}
             </div>
           </div>
 
-          <div className="card" style={{ background: "rgba(255,255,255,0.04)" }}>
+          <div
+            className="card"
+            style={{ background: "rgba(255,255,255,0.04)" }}
+          >
             <div className="small">Renews / Ends</div>
             <div className="kpi" style={{ fontSize: 16, marginTop: 10 }}>
               {renewal}
@@ -81,20 +102,33 @@ export default function AccountPage() {
         </div>
 
         {!info?.isPro && (
-          <div className="card" style={{ marginTop: 14, borderColor: "rgba(124,58,237,0.5)", background: "rgba(124,58,237,0.10)" }}>
+          <div
+            className="card"
+            style={{
+              marginTop: 14,
+              borderColor: "rgba(124,58,237,0.5)",
+              background: "rgba(124,58,237,0.10)",
+            }}
+          >
             <div className="row" style={{ justifyContent: "space-between" }}>
               <div>
                 <strong>Upgrade to Pro</strong>
                 <div className="small">Unlock the full feed + alerts.</div>
               </div>
-              <Link className="btn primary" href="/pricing">Subscribe</Link>
+              <Link className="btn primary" href="/pricing">
+                Subscribe
+              </Link>
             </div>
           </div>
         )}
 
         <div className="row" style={{ marginTop: 14 }}>
-          <Link className="btn" href="/dashboard">Go to dashboard</Link>
-          <Link className="btn" href="/pricing">Pricing</Link>
+          <Link className="btn" href="/dashboard">
+            Go to dashboard
+          </Link>
+          <Link className="btn" href="/pricing">
+            Pricing
+          </Link>
         </div>
       </div>
     </div>

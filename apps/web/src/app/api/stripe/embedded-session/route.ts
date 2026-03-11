@@ -15,15 +15,18 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const plan = (body?.plan || "pro") as "pro" | "elite";
+    const plan = body?.plan === "elite" ? "elite" : "pro";
 
-    const price =
+    const priceId =
       plan === "elite"
         ? process.env.STRIPE_PRICE_ELITE
         : process.env.STRIPE_PRICE_PRO;
 
-    if (!price) {
-      return NextResponse.json({ error: "Missing Stripe price id" }, { status: 500 });
+    if (!priceId) {
+      return NextResponse.json(
+        { error: "Missing Stripe price id" },
+        { status: 500 }
+      );
     }
 
     const appUrl =
@@ -35,20 +38,26 @@ export async function POST(req: Request) {
       mode: "subscription",
       ui_mode: "embedded",
       customer_email: session.user.email,
-      line_items: [{ price, quantity: 1 }],
-      return_url: `${appUrl}/account?checkout=success`,
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      return_url: `${appUrl}/dashboard?checkout=success`,
       metadata: {
-        plan,
         user_email: session.user.email,
+        plan,
       },
     });
 
     return NextResponse.json({
       clientSecret: checkout.client_secret,
     });
-  } catch (e: any) {
+  } catch (err: any) {
+    console.error("Embedded session route failed:", err);
     return NextResponse.json(
-      { error: e?.message || "Failed to create checkout session" },
+      { error: err?.message || "Failed to create checkout session" },
       { status: 500 }
     );
   }
