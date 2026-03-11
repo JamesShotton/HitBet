@@ -91,7 +91,7 @@ export default function Home() {
                 className="small"
                 style={{ marginTop: 10, lineHeight: 1.75 }}
               >
-                We scan books, pick best prices on both sides, then compute a
+                We scan books, pick the best prices on both sides, then compute a
                 stake split. The result is an execution card: who to back, where
                 to back them, and how much.
               </div>
