@@ -4,282 +4,184 @@ import { ArbRow } from "./db.js";
 const TOTAL_STAKE = Number(process.env.TOTAL_STAKE ?? 50);
 
 // ─────────────────────────────────────────────────────────────
-// Maths helpers
+// Maths
 // ─────────────────────────────────────────────────────────────
 
-function imp(odds: number) {
-  return 1 / odds;
-}
-
-function round2(n: number) {
-  return Math.round(n * 100) / 100;
-}
+const imp = (o: number) => 1 / o;
+const r2 = (n: number) => Math.round(n * 100) / 100;
 
 function split2(oA: number, oB: number) {
-  const pA = imp(oA),
-    pB = imp(oB),
-    t = pA + pB;
-  return {
-    sA: round2((TOTAL_STAKE * pA) / t),
-    sB: round2((TOTAL_STAKE * pB) / t),
-  };
+  const pA = imp(oA), pB = imp(oB), t = pA + pB;
+  return { sA: r2((TOTAL_STAKE * pA) / t), sB: r2((TOTAL_STAKE * pB) / t) };
 }
 
 function split3(oA: number, oB: number, oC: number) {
-  const pA = imp(oA),
-    pB = imp(oB),
-    pC = imp(oC),
-    t = pA + pB + pC;
+  const pA = imp(oA), pB = imp(oB), pC = imp(oC), t = pA + pB + pC;
   return {
-    sA: round2((TOTAL_STAKE * pA) / t),
-    sB: round2((TOTAL_STAKE * pB) / t),
-    sC: round2((TOTAL_STAKE * pC) / t),
+    sA: r2((TOTAL_STAKE * pA) / t),
+    sB: r2((TOTAL_STAKE * pB) / t),
+    sC: r2((TOTAL_STAKE * pC) / t),
   };
 }
 
-function minProfit2(sA: number, sB: number, oA: number, oB: number) {
-  return round2(Math.min(sA * oA, sB * oB) - (sA + sB));
-}
+const profit2 = (sA: number, sB: number, oA: number, oB: number) =>
+  r2(Math.min(sA * oA, sB * oB) - (sA + sB));
 
-function minProfit3(
-  sA: number,
-  sB: number,
-  sC: number,
-  oA: number,
-  oB: number,
-  oC: number
-) {
-  return round2(Math.min(sA * oA, sB * oB, sC * oC) - (sA + sB + sC));
-}
+const profit3 = (sA: number, sB: number, sC: number, oA: number, oB: number, oC: number) =>
+  r2(Math.min(sA * oA, sB * oB, sC * oC) - (sA + sB + sC));
 
-function margin2(oA: number, oB: number) {
-  return 1 - imp(oA) - imp(oB);
-}
-
-function margin3(oA: number, oB: number, oC: number) {
-  return 1 - imp(oA) - imp(oB) - imp(oC);
-}
+const margin2 = (oA: number, oB: number) => 1 - imp(oA) - imp(oB);
+const margin3 = (oA: number, oB: number, oC: number) => 1 - imp(oA) - imp(oB) - imp(oC);
 
 // ─────────────────────────────────────────────────────────────
-// Best-price extraction
+// Best price extraction
 // ─────────────────────────────────────────────────────────────
 
-type BestPrice = { odds: number; book: string };
+type BP = { odds: number; book: string };
 
-/**
- * Scans all bookmakers for a given market and returns the best
- * (highest) odds per outcome key.
- *
- * usePoint=false → key is outcome name only         (h2h)
- * usePoint=true  → key is "name::point"             (spreads, totals)
- */
 function bestByKey(
   bookmakers: OddsBookmaker[],
   marketKey: string,
   usePoint = false
-): Record<string, BestPrice> {
-  const best: Record<string, BestPrice> = {};
-
+): Record<string, BP> {
+  const best: Record<string, BP> = {};
   for (const book of bookmakers) {
-    const market = book.markets.find((m) => m.key === marketKey);
+    const market = book.markets.find(m => m.key === marketKey);
     if (!market) continue;
-
-    for (const outcome of market.outcomes) {
-      if (!outcome?.name || typeof outcome.price !== "number") continue;
-      if (outcome.price <= 1.01) continue;
-
-      const key =
-        usePoint && outcome.point != null
-          ? `${outcome.name}::${outcome.point}`
-          : outcome.name;
-
-      if (!best[key] || outcome.price > best[key].odds) {
-        best[key] = { odds: outcome.price, book: book.title };
+    for (const o of market.outcomes) {
+      if (!o?.name || typeof o.price !== "number" || o.price <= 1.01) continue;
+      // For player props the player name is in description, not name
+      const label = (o as any).description
+        ? `${(o as any).description}::${o.name}::${o.point ?? ""}`
+        : usePoint && o.point != null
+          ? `${o.name}::${o.point}`
+          : o.name;
+      if (!best[label] || o.price > best[label].odds) {
+        best[label] = { odds: o.price, book: book.title };
       }
     }
   }
-
   return best;
 }
 
 // ─────────────────────────────────────────────────────────────
-// H2H 2-way  (US sports, tennis — no draw)
+// H2H 2-way  (no draw — tennis, NBA, NHL, NFL etc)
 // ─────────────────────────────────────────────────────────────
 
-function findH2H2Way(event: OddsEvent): ArbRow | null {
-  const best = bestByKey(event.bookmakers, "h2h", false);
+function h2h2(event: OddsEvent, marketKey = "h2h"): ArbRow | null {
+  const best = bestByKey(event.bookmakers, marketKey, false);
   const names = Object.keys(best);
   if (names.length !== 2) return null;
-
   const [n1, n2] = names;
   const { odds: o1, book: b1 } = best[n1];
   const { odds: o2, book: b2 } = best[n2];
   if (b1 === b2) return null;
-
   const m = margin2(o1, o2);
   if (m <= 0) return null;
-
   const { sA, sB } = split2(o1, o2);
-
   return {
     event: `${event.home_team} vs ${event.away_team}`,
     sport_key: event.sport_key,
-    market_group: "h2h",
+    market_group: marketKey,
     commence_time: event.commence_time,
-    legs: 2,
-    margin: round2(m),
-    est_profit: minProfit2(sA, sB, o1, o2),
+    legs: 2, margin: r2(m),
+    est_profit: profit2(sA, sB, o1, o2),
     total_stake: TOTAL_STAKE,
-    leg1_name: n1,
-    leg1_book: b1,
-    leg1_odds: o1,
-    leg1_stake: sA,
-    leg1_point: null,
-    leg2_name: n2,
-    leg2_book: b2,
-    leg2_odds: o2,
-    leg2_stake: sB,
-    leg2_point: null,
+    leg1_name: n1, leg1_book: b1, leg1_odds: o1, leg1_stake: sA, leg1_point: null,
+    leg2_name: n2, leg2_book: b2, leg2_odds: o2, leg2_stake: sB, leg2_point: null,
   };
 }
 
 // ─────────────────────────────────────────────────────────────
-// H2H 3-way  (football 1X2 — home / draw / away)
+// H2H 3-way  (football 1X2)
 // ─────────────────────────────────────────────────────────────
 
-function findH2H3Way(event: OddsEvent): ArbRow | null {
-  const best = bestByKey(event.bookmakers, "h2h", false);
+function h2h3(event: OddsEvent, marketKey = "h2h"): ArbRow | null {
+  const best = bestByKey(event.bookmakers, marketKey, false);
   const names = Object.keys(best);
   if (names.length !== 3) return null;
-
-  const home = event.home_team;
-  const away = event.away_team;
-  const homeKey = names.find((n) => n === home);
-  const awayKey = names.find((n) => n === away);
-  const drawKey = names.find((n) => n !== home && n !== away);
-
+  const homeKey = names.find(n => n === event.home_team);
+  const awayKey = names.find(n => n === event.away_team);
+  const drawKey = names.find(n => n !== event.home_team && n !== event.away_team);
   if (!homeKey || !awayKey || !drawKey) return null;
-
   const { odds: oH, book: bH } = best[homeKey];
   const { odds: oD, book: bD } = best[drawKey];
   const { odds: oA, book: bA } = best[awayKey];
-
   const m = margin3(oH, oD, oA);
   if (m <= 0) return null;
-
   const { sA: sH, sB: sD, sC: sAway } = split3(oH, oD, oA);
-
   return {
-    event: `${home} vs ${away}`,
+    event: `${event.home_team} vs ${event.away_team}`,
     sport_key: event.sport_key,
-    market_group: "h2h_3way",
+    market_group: marketKey === "h2h" ? "h2h_3way" : `${marketKey}_3way`,
     commence_time: event.commence_time,
-    legs: 3,
-    margin: round2(m),
-    est_profit: minProfit3(sH, sD, sAway, oH, oD, oA),
+    legs: 3, margin: r2(m),
+    est_profit: profit3(sH, sD, sAway, oH, oD, oA),
     total_stake: TOTAL_STAKE,
-    leg1_name: `${home} win`,
-    leg1_book: bH,
-    leg1_odds: oH,
-    leg1_stake: sH,
-    leg1_point: null,
-    leg2_name: "Draw",
-    leg2_book: bD,
-    leg2_odds: oD,
-    leg2_stake: sD,
-    leg2_point: null,
-    leg3_name: `${away} win`,
-    leg3_book: bA,
-    leg3_odds: oA,
-    leg3_stake: sAway,
-    leg3_point: null,
+    leg1_name: `${event.home_team} win`, leg1_book: bH, leg1_odds: oH, leg1_stake: sH, leg1_point: null,
+    leg2_name: "Draw", leg2_book: bD, leg2_odds: oD, leg2_stake: sD, leg2_point: null,
+    leg3_name: `${event.away_team} win`, leg3_book: bA, leg3_odds: oA, leg3_stake: sAway, leg3_point: null,
   };
 }
 
 // ─────────────────────────────────────────────────────────────
-// Spreads  (handicap — match on exact point line, opposite sides)
-//
-// e.g. Bet365: Arsenal -1.5 @ 2.10
-//      Unibet: Chelsea +1.5 @ 2.05
-//      imp(2.10) + imp(2.05) = 0.476 + 0.488 = 0.964 → arb!
+// Spreads  (handicap — match on exact absolute point line)
+// Works for standard spreads AND alternate_spreads
 // ─────────────────────────────────────────────────────────────
 
-function findSpreads(event: OddsEvent): ArbRow[] {
+function spreads(event: OddsEvent, marketKey = "spreads"): ArbRow[] {
   const arbs: ArbRow[] = [];
-  const best = bestByKey(event.bookmakers, "spreads", true);
+  const best = bestByKey(event.bookmakers, marketKey, true);
 
   type Side = { name: string; odds: number; book: string; point: number };
-  const byAbsPoint: Record<string, Side[]> = {};
+  const byAbs: Record<string, Side[]> = {};
 
   for (const [key, bp] of Object.entries(best)) {
     const [name, pointStr] = key.split("::");
     const point = parseFloat(pointStr);
     if (isNaN(point)) continue;
     const abs = String(Math.abs(point));
-    if (!byAbsPoint[abs]) byAbsPoint[abs] = [];
-    byAbsPoint[abs].push({ name, odds: bp.odds, book: bp.book, point });
+    if (!byAbs[abs]) byAbs[abs] = [];
+    byAbs[abs].push({ name, odds: bp.odds, book: bp.book, point });
   }
 
-  for (const sides of Object.values(byAbsPoint)) {
-    // Need one negative side and one positive side at the same line
-    const neg = sides.filter((s) => s.point < 0);
-    const pos = sides.filter((s) => s.point > 0);
-
-    // Try all neg/pos combinations — pick the best margin pair
-    for (const n of neg) {
-      for (const p of pos) {
+  for (const sides of Object.values(byAbs)) {
+    const negs = sides.filter(s => s.point < 0);
+    const poss = sides.filter(s => s.point > 0);
+    for (const n of negs) {
+      for (const p of poss) {
         if (n.book === p.book) continue;
         const m = margin2(n.odds, p.odds);
         if (m <= 0) continue;
-
         const { sA, sB } = split2(n.odds, p.odds);
-
         arbs.push({
           event: `${event.home_team} vs ${event.away_team}`,
           sport_key: event.sport_key,
-          market_group: "spreads",
+          market_group: marketKey,
           commence_time: event.commence_time,
-          legs: 2,
-          margin: round2(m),
-          est_profit: minProfit2(sA, sB, n.odds, p.odds),
+          legs: 2, margin: r2(m),
+          est_profit: profit2(sA, sB, n.odds, p.odds),
           total_stake: TOTAL_STAKE,
-          leg1_name: `${n.name} ${n.point}`,
-          leg1_book: n.book,
-          leg1_odds: n.odds,
-          leg1_stake: sA,
-          leg1_point: String(n.point),
-          leg2_name: `${p.name} +${p.point}`,
-          leg2_book: p.book,
-          leg2_odds: p.odds,
-          leg2_stake: sB,
-          leg2_point: String(p.point),
+          leg1_name: `${n.name} ${n.point}`, leg1_book: n.book, leg1_odds: n.odds, leg1_stake: sA, leg1_point: String(n.point),
+          leg2_name: `${p.name} +${p.point}`, leg2_book: p.book, leg2_odds: p.odds, leg2_stake: sB, leg2_point: String(p.point),
         });
       }
     }
   }
-
   return arbs;
 }
 
 // ─────────────────────────────────────────────────────────────
 // Totals  (over/under — match on exact point line)
-//
-// e.g. Bet365:    Over 2.5 goals  @ 2.20
-//      William Hill: Under 2.5 goals @ 2.15
-//      imp(2.20) + imp(2.15) = 0.455 + 0.465 = 0.920 → arb!
+// Works for totals AND alternate_totals (O/U 0.5, 1.5, 2.5...)
 // ─────────────────────────────────────────────────────────────
 
-function findTotals(event: OddsEvent): ArbRow[] {
+function totals(event: OddsEvent, marketKey = "totals"): ArbRow[] {
   const arbs: ArbRow[] = [];
-  const best = bestByKey(event.bookmakers, "totals", true);
+  const best = bestByKey(event.bookmakers, marketKey, true);
 
-  type TotalSide = {
-    side: "Over" | "Under";
-    odds: number;
-    book: string;
-    point: number;
-  };
-  const byPoint: Record<string, TotalSide[]> = {};
+  type TSide = { side: "Over" | "Under"; odds: number; book: string; point: number };
+  const byPoint: Record<string, TSide[]> = {};
 
   for (const [key, bp] of Object.entries(best)) {
     const [side, pointStr] = key.split("::");
@@ -287,88 +189,174 @@ function findTotals(event: OddsEvent): ArbRow[] {
     const point = parseFloat(pointStr);
     if (isNaN(point)) continue;
     if (!byPoint[pointStr]) byPoint[pointStr] = [];
-    byPoint[pointStr].push({
-      side: side as "Over" | "Under",
-      odds: bp.odds,
-      book: bp.book,
-      point,
-    });
+    byPoint[pointStr].push({ side: side as "Over" | "Under", odds: bp.odds, book: bp.book, point });
   }
 
   for (const sides of Object.values(byPoint)) {
-    const overs = sides.filter((s) => s.side === "Over");
-    const unders = sides.filter((s) => s.side === "Under");
-
-    // Try all over/under combinations at the same line
+    const overs = sides.filter(s => s.side === "Over");
+    const unders = sides.filter(s => s.side === "Under");
     for (const ov of overs) {
       for (const un of unders) {
         if (ov.book === un.book) continue;
         const m = margin2(ov.odds, un.odds);
         if (m <= 0) continue;
-
         const { sA, sB } = split2(ov.odds, un.odds);
-
         arbs.push({
           event: `${event.home_team} vs ${event.away_team}`,
           sport_key: event.sport_key,
-          market_group: "totals",
+          market_group: marketKey,
           commence_time: event.commence_time,
-          legs: 2,
-          margin: round2(m),
-          est_profit: minProfit2(sA, sB, ov.odds, un.odds),
+          legs: 2, margin: r2(m),
+          est_profit: profit2(sA, sB, ov.odds, un.odds),
           total_stake: TOTAL_STAKE,
-          leg1_name: `Over ${ov.point}`,
-          leg1_book: ov.book,
-          leg1_odds: ov.odds,
-          leg1_stake: sA,
-          leg1_point: String(ov.point),
-          leg2_name: `Under ${un.point}`,
-          leg2_book: un.book,
-          leg2_odds: un.odds,
-          leg2_stake: sB,
-          leg2_point: String(un.point),
+          leg1_name: `Over ${ov.point}`, leg1_book: ov.book, leg1_odds: ov.odds, leg1_stake: sA, leg1_point: String(ov.point),
+          leg2_name: `Under ${un.point}`, leg2_book: un.book, leg2_odds: un.odds, leg2_stake: sB, leg2_point: String(un.point),
         });
       }
     }
   }
-
   return arbs;
 }
 
 // ─────────────────────────────────────────────────────────────
-// Main export
+// Player props  (points, rebounds, assists, goals, strikeouts…)
+// These come from event-level API calls with description = player name
+// key format in bestByKey: "PlayerName::Over/Under::point"
+// ─────────────────────────────────────────────────────────────
+
+function playerProps(event: OddsEvent, marketKey: string): ArbRow[] {
+  const arbs: ArbRow[] = [];
+  const best = bestByKey(event.bookmakers, marketKey, true);
+
+  // Group by "PlayerName::Over/Under" pairing at same point
+  type PSide = { player: string; side: "Over" | "Under"; odds: number; book: string; point: number };
+  const byPlayerPoint: Record<string, PSide[]> = {};
+
+  for (const [key, bp] of Object.entries(best)) {
+    // key format: "PlayerName::Over/Under::point"
+    const parts = key.split("::");
+    if (parts.length < 3) continue;
+    const [player, side, pointStr] = parts;
+    if (side !== "Over" && side !== "Under") continue;
+    const point = parseFloat(pointStr);
+    if (isNaN(point)) continue;
+    const groupKey = `${player}::${point}`;
+    if (!byPlayerPoint[groupKey]) byPlayerPoint[groupKey] = [];
+    byPlayerPoint[groupKey].push({ player, side: side as "Over" | "Under", odds: bp.odds, book: bp.book, point });
+  }
+
+  for (const sides of Object.values(byPlayerPoint)) {
+    const overs = sides.filter(s => s.side === "Over");
+    const unders = sides.filter(s => s.side === "Under");
+    for (const ov of overs) {
+      for (const un of unders) {
+        if (ov.book === un.book) continue;
+        const m = margin2(ov.odds, un.odds);
+        if (m <= 0) continue;
+        const { sA, sB } = split2(ov.odds, un.odds);
+        arbs.push({
+          event: `${event.home_team} vs ${event.away_team}`,
+          sport_key: event.sport_key,
+          market_group: marketKey,
+          commence_time: event.commence_time,
+          legs: 2, margin: r2(m),
+          est_profit: profit2(sA, sB, ov.odds, un.odds),
+          total_stake: TOTAL_STAKE,
+          leg1_name: `${ov.player} Over ${ov.point}`, leg1_book: ov.book, leg1_odds: ov.odds, leg1_stake: sA, leg1_point: String(ov.point),
+          leg2_name: `${un.player} Under ${un.point}`, leg2_book: un.book, leg2_odds: un.odds, leg2_stake: sB, leg2_point: String(un.point),
+        });
+      }
+    }
+  }
+  return arbs;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Market groups — what to scan per sport
+// ─────────────────────────────────────────────────────────────
+
+// Featured markets (bulk /odds endpoint) — safe for all sports
+const FEATURED_MARKETS = ["h2h", "spreads", "totals", "alternate_spreads", "alternate_totals"];
+
+// Half-time / period markets — available for most sports
+const PERIOD_MARKETS: Record<string, string[]> = {
+  soccer: ["h2h_h1", "h2h_h2"],
+  basketball: ["h2h_h1", "h2h_h2", "h2h_q1", "h2h_q2", "h2h_q3", "h2h_q4"],
+  americanfootball: ["h2h_h1", "h2h_q1"],
+  icehockey: ["h2h_p1", "h2h_p2", "h2h_p3"],
+  baseball: ["h2h_1st_5_innings"],
+};
+
+function getPeriodMarkets(sportKey: string): string[] {
+  for (const [prefix, markets] of Object.entries(PERIOD_MARKETS)) {
+    if (sportKey.includes(prefix)) return markets;
+  }
+  return [];
+}
+
+// Player prop market keys per sport (used only in props scanner)
+export const PROP_MARKETS: Record<string, string[]> = {
+  basketball_nba: ["player_points", "player_rebounds", "player_assists", "player_threes", "player_blocks", "player_steals", "player_points_rebounds_assists"],
+  basketball_ncaab: ["player_points", "player_rebounds", "player_assists"],
+  americanfootball_nfl: ["player_pass_yds", "player_rush_yds", "player_reception_yds", "player_receptions", "player_pass_tds", "player_anytime_td"],
+  baseball_mlb: ["batter_home_runs", "batter_hits", "batter_total_bases", "pitcher_strikeouts", "pitcher_outs"],
+  icehockey_nhl: ["player_points", "player_goals", "player_assists", "player_shots_on_goal"],
+  soccer_epl: ["player_goal_scorer_anytime", "player_shots_on_target", "player_assists"],
+  soccer_uefa_champs_league: ["player_goal_scorer_anytime", "player_shots_on_target"],
+};
+
+// ─────────────────────────────────────────────────────────────
+// Main export — processes featured + period markets
+// Props are handled separately in propsScanner.ts (per-event)
 // ─────────────────────────────────────────────────────────────
 
 export function extractArbs(events: OddsEvent[]): ArbRow[] {
   const arbs: ArbRow[] = [];
 
   for (const event of events) {
-    // Skip events starting in less than 5 minutes — too risky to execute in time
     const startsIn = new Date(event.commence_time).getTime() - Date.now();
     if (startsIn < 5 * 60 * 1000) continue;
-
     if (!event.bookmakers || event.bookmakers.length < 2) continue;
 
-    const h2h2 = findH2H2Way(event);
-    if (h2h2) arbs.push(h2h2);
+    // ── Featured markets ──
+    for (const mkt of FEATURED_MARKETS) {
+      // h2h: try 2-way first, then 3-way
+      if (mkt === "h2h") {
+        const a2 = h2h2(event, mkt);
+        if (a2) arbs.push(a2);
+        else {
+          const a3 = h2h3(event, mkt);
+          if (a3) arbs.push(a3);
+        }
+      } else if (mkt === "spreads" || mkt === "alternate_spreads") {
+        arbs.push(...spreads(event, mkt));
+      } else if (mkt === "totals" || mkt === "alternate_totals") {
+        arbs.push(...totals(event, mkt));
+      }
+    }
 
-    const h2h3 = findH2H3Way(event);
-    if (h2h3) arbs.push(h2h3);
-
-    arbs.push(...findSpreads(event));
-    arbs.push(...findTotals(event));
+    // ── Period / half-time markets ──
+    for (const mkt of getPeriodMarkets(event.sport_key)) {
+      const a2 = h2h2(event, mkt);
+      if (a2) arbs.push(a2);
+      else {
+        const a3 = h2h3(event, mkt);
+        if (a3) arbs.push(a3);
+      }
+    }
   }
 
-  // Deduplicate: same event + market + books + line
+  // Dedup
   const seen = new Set<string>();
-  const deduped = arbs.filter((a) => {
-    const key = `${a.event}|${a.market_group}|${a.leg1_book}|${a.leg2_book}|${
-      a.leg1_point ?? ""
-    }|${a.leg2_point ?? ""}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-
-  return deduped.sort((a, b) => b.margin - a.margin);
+  return arbs
+    .filter(a => {
+      const k = `${a.event}|${a.market_group}|${a.leg1_book}|${a.leg2_book}|${a.leg1_point ?? ""}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
+    .sort((a, b) => b.margin - a.margin);
 }
+
+// Also export the individual scanners for use by propsScanner
+export { playerProps, totals, spreads };
