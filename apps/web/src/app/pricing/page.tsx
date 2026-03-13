@@ -58,7 +58,6 @@ export default function PricingPage() {
               </div>
             </div>
             <div style={{ ...styles.card, ...styles.cardElite }}>
-              <div style={styles.badge}>Most popular</div>
               <div style={styles.cardTop}>
                 <div>
                   <div style={styles.planName}>Elite</div>
