@@ -35,26 +35,207 @@ type ArbApiResponse = {
   error?: string;
 };
 
-function formatMoney(value: number | string | null | undefined) {
-  const n = Number(value ?? 0);
-  return `£${n.toFixed(2)}`;
+function fmt(v: number | string | null | undefined) {
+  return `£${Number(v ?? 0).toFixed(2)}`;
+}
+function pct(v: number | string | null | undefined) {
+  return `${(Number(v ?? 0) * 100).toFixed(2)}%`;
+}
+function timeUntil(v: string | null | undefined) {
+  if (!v) return "Unknown";
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return "Unknown";
+  const diff = d.getTime() - Date.now();
+  if (diff < 0) return "In play";
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `in ${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `in ${hrs}h`;
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 }
 
-function formatPercent(value: number | string | null | undefined) {
-  const n = Number(value ?? 0);
-  return `${(n * 100).toFixed(2)}%`;
+function sportEmoji(sport: string) {
+  const s = sport.toLowerCase();
+  if (
+    s.includes("soccer") ||
+    s.includes("epl") ||
+    s.includes("liga") ||
+    s.includes("bundesliga") ||
+    s.includes("ligue")
+  )
+    return "⚽";
+  if (s.includes("basket") || s.includes("nba")) return "🏀";
+  if (s.includes("tennis") || s.includes("atp") || s.includes("wta"))
+    return "🎾";
+  if (s.includes("hockey") || s.includes("nhl") || s.includes("ahl"))
+    return "🏒";
+  if (s.includes("american") || s.includes("nfl")) return "🏈";
+  if (s.includes("baseball") || s.includes("mlb")) return "⚾";
+  return "🎯";
 }
 
-function formatDate(value: string | null | undefined) {
-  if (!value) return "Unknown start";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "Unknown start";
-  return d.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function HotCard({
+  arb,
+  stake,
+  onExpand,
+}: {
+  arb: Arb;
+  stake: number;
+  onExpand: () => void;
+}) {
+  const scale = stake / (Number(arb.total_stake ?? 50) || 50);
+  const profit = Number(arb.est_profit) * scale;
+  const marginPct = Number(arb.margin) * 100;
+  return (
+    <div style={s.hotCard} onClick={onExpand}>
+      <div style={s.hotTop}>
+        <span style={s.hotEmoji}>{sportEmoji(arb.sport_key)}</span>
+        <span style={s.hotMargin}>{pct(arb.margin)}</span>
+      </div>
+      <div style={s.hotEvent}>{arb.event}</div>
+      <div style={s.hotRow}>
+        <span style={s.hotBooks}>
+          {arb.leg1_book} · {arb.leg2_book}
+        </span>
+        <span style={s.hotProfit}>+{fmt(profit)}</span>
+      </div>
+      <div style={s.hotTime}>{timeUntil(arb.commence_time)}</div>
+    </div>
+  );
+}
+
+function ArbRow({
+  arb,
+  stake,
+  demo,
+  expanded,
+  onToggle,
+}: {
+  arb: Arb;
+  stake: number;
+  demo: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const scale = stake / (Number(arb.total_stake ?? 50) || 50);
+  const s1 = Number(arb.leg1_stake) * scale;
+  const s2 = Number(arb.leg2_stake) * scale;
+  const profit = Number(arb.est_profit) * scale;
+  const mPct = Number(arb.margin) * 100;
+  const mColor =
+    mPct >= 3 ? "#9be7bf" : mPct >= 1.5 ? "#98b8ff" : "rgba(255,255,255,0.75)";
+
+  return (
+    <>
+      <tr
+        style={{ ...s.row, ...(expanded ? s.rowActive : {}) }}
+        onClick={onToggle}
+      >
+        <td style={s.td}>
+          <div style={s.cellEvent}>{arb.event}</div>
+          <div style={s.cellMeta}>
+            <span>
+              {sportEmoji(arb.sport_key)} {arb.sport_key}
+            </span>
+            <span style={s.chip}>{arb.market_group}</span>
+          </div>
+        </td>
+        <td style={s.td}>
+          <div style={s.cellBook}>
+            {arb.leg1_book}{" "}
+            <span style={s.cellOdds}>@ {Number(arb.leg1_odds).toFixed(2)}</span>
+          </div>
+          <div style={s.cellPick}>{arb.leg1_name}</div>
+        </td>
+        <td style={s.td}>
+          <div style={s.cellBook}>
+            {arb.leg2_book}{" "}
+            <span style={s.cellOdds}>@ {Number(arb.leg2_odds).toFixed(2)}</span>
+          </div>
+          <div style={s.cellPick}>{arb.leg2_name}</div>
+        </td>
+        <td style={s.tdR}>
+          <span style={{ ...s.marginBadge, color: mColor }}>
+            {pct(arb.margin)}
+          </span>
+        </td>
+        <td style={s.tdR}>
+          <span style={s.profitBadge}>+{fmt(profit)}</span>
+        </td>
+        <td style={s.tdR}>
+          <span style={s.timeBadge}>{timeUntil(arb.commence_time)}</span>
+        </td>
+        <td style={s.tdR}>
+          <span style={{ ...s.chevron, ...(expanded ? s.chevronOpen : {}) }}>
+            ▾
+          </span>
+        </td>
+      </tr>
+
+      {expanded && (
+        <tr style={s.expandRow}>
+          <td colSpan={7} style={s.expandCell}>
+            <div style={s.expandBox}>
+              <div style={s.expandLegs}>
+                <div style={s.expandLeg}>
+                  <div style={s.expandBook}>{arb.leg1_book}</div>
+                  <div style={s.expandPick}>{arb.leg1_name}</div>
+                  <div style={s.expandStat}>
+                    <span style={s.expandStatL}>Odds</span>
+                    <span style={s.expandStatROdds}>
+                      @ {Number(arb.leg1_odds).toFixed(2)}
+                    </span>
+                  </div>
+                  <div style={s.expandStat}>
+                    <span style={s.expandStatL}>Stake</span>
+                    <span style={s.expandStatR}>{fmt(s1)}</span>
+                  </div>
+                </div>
+                <div style={s.expandVr} />
+                <div style={s.expandLeg}>
+                  <div style={s.expandBook}>{arb.leg2_book}</div>
+                  <div style={s.expandPick}>{arb.leg2_name}</div>
+                  <div style={s.expandStat}>
+                    <span style={s.expandStatL}>Odds</span>
+                    <span style={s.expandStatROdds}>
+                      @ {Number(arb.leg2_odds).toFixed(2)}
+                    </span>
+                  </div>
+                  <div style={s.expandStat}>
+                    <span style={s.expandStatL}>Stake</span>
+                    <span style={s.expandStatR}>{fmt(s2)}</span>
+                  </div>
+                </div>
+                <div style={s.expandVr} />
+                <div style={s.expandSummary}>
+                  <div style={s.expandStat}>
+                    <span style={s.expandStatL}>Total stake</span>
+                    <span style={s.expandStatR}>{fmt(stake)}</span>
+                  </div>
+                  <div style={s.expandStat}>
+                    <span style={s.expandStatL}>Profit</span>
+                    <span style={{ ...s.expandStatR, color: "#9be7bf" }}>
+                      +{fmt(profit)}
+                    </span>
+                  </div>
+                  <div style={s.expandStat}>
+                    <span style={s.expandStatL}>Margin</span>
+                    <span style={s.expandStatR}>{pct(arb.margin)}</span>
+                  </div>
+                </div>
+              </div>
+              {!demo && (
+                <div style={s.expandTip}>
+                  💡 Place <b>{arb.leg1_book}</b> first, wait 20–30s, then{" "}
+                  <b>{arb.leg2_book}</b>. Round stakes slightly to avoid flags.
+                </div>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
 }
 
 export default function DashboardPage() {
@@ -68,16 +249,16 @@ export default function DashboardPage() {
   const [plan, setPlan] = useState<string | null>(null);
   const [trial, setTrial] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
-  const [totalStakeInput, setTotalStakeInput] = useState("50");
+  const [stakeInput, setStakeInput] = useState("50");
+  const [expandedId, setExpandedId] = useState<string | number | null>(null);
+  const [minMargin, setMinMargin] = useState(0);
 
-  async function loadArbs() {
+  async function load() {
     try {
       setError("");
       const res = await fetch("/api/arbs", { cache: "no-store" });
       const data: ArbApiResponse = await res.json();
-
-      if (!res.ok) throw new Error(data?.error || "Failed to load arbs");
-
+      if (!res.ok) throw new Error(data?.error || "Failed to load");
       setArbs(Array.isArray(data.arbs) ? data.arbs : []);
       setSignedIn(Boolean(data.signedIn));
       setActive(Boolean(data.active));
@@ -86,101 +267,114 @@ export default function DashboardPage() {
       setTrial(Boolean(data.trial));
       setTrialDaysLeft(data.trialDaysLeft ?? 0);
       setUpdatedAt(new Date());
-    } catch (err: any) {
-      setError(err?.message || "Failed to load arbs");
+    } catch (e: any) {
+      setError(e?.message || "Failed to load arbs");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadArbs();
-    const interval = setInterval(loadArbs, 30000);
-    return () => clearInterval(interval);
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
   }, []);
 
-  const totalStake = Math.max(1, Number(totalStakeInput) || 0);
+  const stake = Math.max(1, Number(stakeInput) || 50);
 
-  const topStats = useMemo(() => {
-    const count = arbs.length;
+  const filtered = useMemo(
+    () => arbs.filter((a) => Number(a.margin) * 100 >= minMargin),
+    [arbs, minMargin]
+  );
+
+  const hot = useMemo(() => filtered.slice(0, 3), [filtered]);
+
+  const stats = useMemo(() => {
+    const count = filtered.length;
     const bestMargin = count
-      ? Math.max(...arbs.map((a) => Number(a.margin) || 0))
+      ? Math.max(...filtered.map((a) => Number(a.margin) || 0))
       : 0;
+    const scale = stake / (Number(filtered[0]?.total_stake ?? 50) || 50);
     const bestProfit = count
-      ? Math.max(
-          ...arbs.map((a) => {
-            const baseStake = Number(a.total_stake ?? 50) || 50;
-            const scale = totalStake / baseStake;
-            return (Number(a.est_profit) || 0) * scale;
-          })
-        )
+      ? Math.max(...filtered.map((a) => (Number(a.est_profit) || 0) * scale))
       : 0;
     return { count, bestMargin, bestProfit };
-  }, [arbs, totalStake]);
+  }, [filtered, stake]);
+
+  function toggle(id: string | number | undefined, i: number) {
+    const key = id ?? i;
+    setExpandedId((p) => (p === key ? null : key));
+  }
 
   return (
-    <main style={styles.page}>
-      <div style={styles.wrap}>
-        {/* ── Trial banner ─────────────────────────────────────────── */}
+    <main style={s.page}>
+      <div style={s.wrap}>
         {trial && !loading && (
-          <div style={styles.trialBanner}>
-            <div style={styles.trialLeft}>
-              <div style={styles.trialBadge}>FREE TRIAL</div>
+          <div style={s.trialBanner}>
+            <div style={s.trialLeft}>
+              <div style={s.trialBadge}>FREE TRIAL</div>
               <div>
-                <div style={styles.trialTitle}>
+                <div style={s.trialTitle}>
                   {trialDaysLeft > 0
                     ? `${trialDaysLeft} day${
                         trialDaysLeft !== 1 ? "s" : ""
-                      } left in your trial`
-                    : "Your trial ends today"}
+                      } left`
+                    : "Trial ends today"}
                 </div>
-                <div style={styles.trialSub}>
-                  You have full access to the live feed. Your card will be
-                  charged automatically when the trial ends.
+                <div style={s.trialSub}>
+                  Full live feed access · card charged automatically when trial
+                  ends
                 </div>
               </div>
             </div>
-            <Link
-              href="/pricing"
-              style={{ ...styles.ctaBtn, ...styles.trialBtn }}
-            >
+            <Link href="/pricing" style={s.trialAction}>
               Manage plan
             </Link>
           </div>
         )}
 
-        <div style={styles.header}>
+        <div style={s.header}>
           <div>
-            <h1 style={styles.title}>Arbitrage Opportunities</h1>
-            <p style={styles.sub}>
-              2-way markets only. Auto-refreshing every 30 seconds.
+            <h1 style={s.title}>Arbitrage feed</h1>
+            <p style={s.sub}>
+              {demo
+                ? "Demo mode — subscribe to unlock live arbs"
+                : "Live 2-way markets · auto-refreshes every 30s"}
             </p>
           </div>
-          <div style={styles.refreshBox}>
-            <div style={styles.refreshLabel}>Last update</div>
-            <div style={styles.refreshValue}>
-              {updatedAt ? updatedAt.toLocaleTimeString("en-GB") : "Waiting..."}
+          <div style={s.headerRight}>
+            <div style={s.stakeBox}>
+              <span style={s.stakePre}>£</span>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={stakeInput}
+                onChange={(e) => setStakeInput(e.target.value)}
+                style={s.stakeIn}
+              />
+            </div>
+            <div style={s.pulse}>
+              <div style={s.pulseDot} />
+              {updatedAt ? updatedAt.toLocaleTimeString("en-GB") : "Waiting…"}
             </div>
           </div>
         </div>
 
         {!signedIn && !loading && (
-          <div style={styles.lockCard}>
+          <div style={s.lock}>
             <div>
-              <div style={styles.lockTitle}>Sign in to access the feed</div>
-              <div style={styles.lockSub}>
-                You're currently viewing guest mode. Sign in, then activate a
-                plan to unlock live arbs.
+              <div style={s.lockT}>Sign in to access the live feed</div>
+              <div style={s.lockS}>
+                You're in guest mode. Sign in and activate a plan to unlock live
+                arbs.
               </div>
             </div>
-            <div style={styles.lockActions}>
-              <Link
-                href="/login"
-                style={{ ...styles.ctaBtn, ...styles.primaryBtn }}
-              >
+            <div style={s.lockBtns}>
+              <Link href="/login" style={s.btnP}>
                 Log in
               </Link>
-              <Link href="/pricing" style={styles.ctaBtn}>
+              <Link href="/pricing" style={s.btnG}>
                 View plans
               </Link>
             </div>
@@ -188,178 +382,138 @@ export default function DashboardPage() {
         )}
 
         {signedIn && !active && !loading && (
-          <div style={styles.lockCard}>
+          <div style={s.lock}>
             <div>
-              <div style={styles.lockTitle}>Demo mode active</div>
-              <div style={styles.lockSub}>
-                Your account is signed in but no active subscription was found.
-                Start a free trial or upgrade to unlock the live feed.
+              <div style={s.lockT}>No active subscription</div>
+              <div style={s.lockS}>
+                Start a free 7-day trial to unlock the live feed. Card required,
+                cancels automatically.
               </div>
             </div>
-            <div style={styles.lockActions}>
-              <Link
-                href="/pricing"
-                style={{ ...styles.ctaBtn, ...styles.primaryBtn }}
-              >
+            <div style={s.lockBtns}>
+              <Link href="/pricing" style={s.btnP}>
                 Try free — 7 days
               </Link>
             </div>
           </div>
         )}
 
-        {/* Stake input */}
-        <div style={styles.controlCard}>
-          <div style={styles.controlTitle}>Total stake</div>
-          <div style={styles.stakeInputWrap}>
-            <span style={styles.currency}>£</span>
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={totalStakeInput}
-              onChange={(e) => setTotalStakeInput(e.target.value)}
-              style={styles.stakeInput}
-            />
-          </div>
-        </div>
-
-        <div style={styles.statsGrid}>
-          <div style={styles.statCard}>
-            <div style={styles.statLabel}>
-              {demo ? "Demo arbs" : "Live arbs"}
-            </div>
-            <div style={styles.statValue}>{topStats.count}</div>
-          </div>
-          <div style={styles.statCard}>
-            <div style={styles.statLabel}>Best margin</div>
-            <div style={styles.statValue}>
-              {formatPercent(topStats.bestMargin)}
-            </div>
-          </div>
-          <div style={styles.statCard}>
-            <div style={styles.statLabel}>
-              {active ? "Best profit" : "Mode"}
-            </div>
-            <div style={styles.statValue}>
-              {active
-                ? formatMoney(topStats.bestProfit)
+        <div style={s.stats}>
+          {[
+            { label: demo ? "Demo arbs" : "Live arbs", val: stats.count },
+            { label: "Best margin", val: pct(stats.bestMargin) },
+            {
+              label: `Best profit @ ${fmt(stake)}`,
+              val: active
+                ? `+${fmt(stats.bestProfit)}`
                 : trial
                 ? "Trial"
-                : signedIn
+                : demo
                 ? "Demo"
-                : "Guest"}
+                : "—",
+            },
+            {
+              label: "Plan",
+              val: plan
+                ? plan[0].toUpperCase() + plan.slice(1)
+                : signedIn
+                ? "None"
+                : "Guest",
+            },
+          ].map(({ label, val }) => (
+            <div key={label} style={s.statCard}>
+              <div style={s.statL}>{label}</div>
+              <div style={s.statV}>{val}</div>
             </div>
-          </div>
+          ))}
         </div>
 
-        {loading && <div style={styles.infoCard}>Loading arbs...</div>}
+        {loading && <div style={s.info}>Loading arbs…</div>}
         {!loading && error && (
-          <div style={{ ...styles.infoCard, ...styles.errorCard }}>{error}</div>
-        )}
-        {!loading && !error && arbs.length === 0 && (
-          <div style={styles.infoCard}>
-            No arbs found yet. Worker may still be scanning.
-          </div>
+          <div style={{ ...s.info, ...s.infoErr }}>{error}</div>
         )}
 
-        {!loading && !error && arbs.length > 0 && (
-          <div style={styles.grid}>
-            {arbs.map((arb, index) => {
-              const baseStake = Number(arb.total_stake ?? 50) || 50;
-              const scale = totalStake / baseStake;
-              const leg1Stake = Number(arb.leg1_stake) * scale;
-              const leg2Stake = Number(arb.leg2_stake) * scale;
-              const estProfit = Number(arb.est_profit) * scale;
+        {!loading && !error && filtered.length > 0 && (
+          <>
+            <div style={s.secLabel}>Hot arbs</div>
+            <div style={s.hotGrid}>
+              {hot.map((a, i) => (
+                <HotCard
+                  key={a.id ?? i}
+                  arb={a}
+                  stake={stake}
+                  onExpand={() => toggle(a.id, i)}
+                />
+              ))}
+            </div>
 
-              return (
-                <div
-                  key={arb.id ?? index}
-                  style={{ ...styles.card, ...(demo ? styles.demoCard : {}) }}
+            <div style={s.filtersBar}>
+              <div style={s.secLabel}>All arbs</div>
+              <div style={s.filtersRight}>
+                <span style={s.filterL}>Min margin</span>
+                <select
+                  style={s.sel}
+                  value={minMargin}
+                  onChange={(e) => setMinMargin(Number(e.target.value))}
                 >
-                  <div style={styles.cardTop}>
-                    <div>
-                      <div style={styles.event}>{arb.event}</div>
-                      <div style={styles.metaRow}>
-                        <span style={styles.chip}>{arb.sport_key}</span>
-                        <span style={styles.chip}>{arb.market_group}</span>
-                        <span style={styles.chip}>
-                          {formatDate(arb.commence_time)}
-                        </span>
-                        {plan && <span style={styles.chip}>{plan}</span>}
-                      </div>
-                    </div>
-                    <div style={styles.metricWrap}>
-                      <div style={styles.metricBox}>
-                        <div style={styles.metricLabel}>Margin</div>
-                        <div style={styles.metricValue}>
-                          {formatPercent(arb.margin)}
-                        </div>
-                      </div>
-                      <div
+                  <option value={0}>Any</option>
+                  <option value={1}>1%+</option>
+                  <option value={2}>2%+</option>
+                  <option value={3}>3%+</option>
+                </select>
+                <span style={s.countPill}>
+                  {filtered.length} arb{filtered.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+            </div>
+
+            <div style={s.tableWrap}>
+              <table style={s.table}>
+                <thead>
+                  <tr>
+                    {[
+                      "Event",
+                      "Leg 1",
+                      "Leg 2",
+                      "Margin",
+                      "Profit",
+                      "Starts",
+                      "",
+                    ].map((h, i) => (
+                      <th
+                        key={i}
                         style={{
-                          ...styles.metricBox,
-                          ...styles.metricBoxProfit,
+                          ...s.th,
+                          ...(i >= 3 ? { textAlign: "right" } : {}),
                         }}
                       >
-                        <div style={styles.metricLabel}>Profit</div>
-                        <div style={styles.metricValue}>
-                          {formatMoney(estProfit)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((a, i) => (
+                    <ArbRow
+                      key={a.id ?? i}
+                      arb={a}
+                      stake={stake}
+                      demo={demo}
+                      expanded={expandedId === (a.id ?? i)}
+                      onToggle={() => toggle(a.id, i)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
 
-                  <div style={styles.legsGrid}>
-                    <div style={styles.legCard}>
-                      <div style={styles.legTop}>
-                        <div style={styles.book}>{arb.leg1_book}</div>
-                        <div style={styles.odds}>
-                          @ {Number(arb.leg1_odds).toFixed(2)}
-                        </div>
-                      </div>
-                      <div style={styles.pick}>{arb.leg1_name}</div>
-                      <div style={styles.stakeRow}>
-                        <span style={styles.stakeLabel}>Stake</span>
-                        <span style={styles.stakeValue}>
-                          {formatMoney(leg1Stake)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div style={styles.legCard}>
-                      <div style={styles.legTop}>
-                        <div style={styles.book}>{arb.leg2_book}</div>
-                        <div style={styles.odds}>
-                          @ {Number(arb.leg2_odds).toFixed(2)}
-                        </div>
-                      </div>
-                      <div style={styles.pick}>{arb.leg2_name}</div>
-                      <div style={styles.stakeRow}>
-                        <span style={styles.stakeLabel}>Stake</span>
-                        <span style={styles.stakeValue}>
-                          {formatMoney(leg2Stake)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={styles.cardBottom}>
-                    <div style={styles.totalStake}>
-                      Total stake: {formatMoney(totalStake)}
-                    </div>
-                    <div style={styles.readyTag}>
-                      {demo
-                        ? "Demo feed"
-                        : trial
-                        ? "Trial access"
-                        : "Ready to place"}
-                    </div>
-                  </div>
-
-                  {demo && <div style={styles.demoOverlay} />}
-                </div>
-              );
-            })}
+        {!loading && !error && filtered.length === 0 && (
+          <div style={s.info}>
+            {demo
+              ? "Sign in and subscribe to see live arbs."
+              : "No arbs found. Worker may still be scanning."}
           </div>
         )}
       </div>
@@ -367,9 +521,9 @@ export default function DashboardPage() {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  page: { minHeight: "100vh", padding: "36px 24px 80px" },
-  wrap: { maxWidth: 1280, margin: "0 auto" },
+const s: Record<string, React.CSSProperties> = {
+  page: { minHeight: "100vh", padding: "32px 0 80px" },
+  wrap: { width: "100%" },
 
   trialBanner: {
     display: "flex",
@@ -378,11 +532,10 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 16,
     flexWrap: "wrap",
     marginBottom: 20,
-    padding: "16px 20px",
-    borderRadius: 20,
-    border: "1px solid rgba(245, 158, 11, 0.30)",
-    background: "rgba(245, 158, 11, 0.08)",
-    backdropFilter: "blur(12px)",
+    padding: "14px 20px",
+    borderRadius: 16,
+    border: "1px solid rgba(245,158,11,0.28)",
+    background: "rgba(245,158,11,0.07)",
   },
   trialLeft: {
     display: "flex",
@@ -391,28 +544,32 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: "wrap",
   },
   trialBadge: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 800,
-    letterSpacing: "0.08em",
-    padding: "5px 10px",
+    letterSpacing: "0.1em",
+    padding: "4px 9px",
     borderRadius: 999,
-    border: "1px solid rgba(245,158,11,0.4)",
-    background: "rgba(245,158,11,0.14)",
+    border: "1px solid rgba(245,158,11,0.38)",
+    background: "rgba(245,158,11,0.12)",
     color: "rgba(245,158,11,0.95)",
-    whiteSpace: "nowrap",
   },
   trialTitle: {
+    fontSize: 14,
+    fontWeight: 700,
     color: "white",
-    fontWeight: 800,
-    fontSize: 15,
     marginBottom: 2,
   },
-  trialSub: { color: "rgba(255,255,255,0.65)", fontSize: 13 },
-  trialBtn: {
-    background: "rgba(245,158,11,0.18)",
+  trialSub: { fontSize: 12, color: "rgba(255,255,255,0.5)" },
+  trialAction: {
+    textDecoration: "none",
+    fontSize: 13,
+    fontWeight: 700,
+    padding: "9px 14px",
+    borderRadius: 12,
     border: "1px solid rgba(245,158,11,0.35)",
+    background: "rgba(245,158,11,0.12)",
     color: "rgba(245,158,11,0.95)",
-    whiteSpace: "nowrap",
+    whiteSpace: "nowrap" as const,
   },
 
   header: {
@@ -424,249 +581,317 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: "wrap",
   },
   title: {
-    fontSize: 48,
-    fontWeight: 800,
+    fontSize: 34,
+    fontWeight: 900,
     letterSpacing: "-0.03em",
     margin: 0,
     color: "white",
   },
-  sub: { margin: "10px 0 0", color: "rgba(255,255,255,0.68)", fontSize: 16 },
-  refreshBox: {
+  sub: { margin: "6px 0 0", color: "rgba(255,255,255,0.5)", fontSize: 13 },
+  headerRight: {
+    display: "flex",
+    gap: 10,
+    alignItems: "center",
+    flexWrap: "wrap" as const,
+  },
+  stakeBox: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
     border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(10,14,20,0.45)",
-    borderRadius: 18,
-    padding: "14px 16px",
-    minWidth: 170,
-    backdropFilter: "blur(12px)",
+    background: "rgba(10,14,20,0.5)",
+    borderRadius: 12,
+    padding: "8px 12px",
   },
-  refreshLabel: {
-    color: "rgba(255,255,255,0.58)",
-    fontSize: 12,
-    marginBottom: 6,
+  stakePre: { color: "rgba(255,255,255,0.55)", fontWeight: 700, fontSize: 13 },
+  stakeIn: {
+    background: "transparent",
+    border: "none",
+    outline: "none",
+    color: "white",
+    fontSize: 14,
+    fontWeight: 700,
+    width: 55,
   },
-  refreshValue: { color: "white", fontSize: 16, fontWeight: 700 },
+  pulse: {
+    display: "flex",
+    alignItems: "center",
+    gap: 7,
+    border: "1px solid rgba(255,255,255,0.10)",
+    background: "rgba(10,14,20,0.5)",
+    borderRadius: 12,
+    padding: "8px 12px",
+    fontSize: 13,
+    color: "rgba(255,255,255,0.65)",
+    fontWeight: 600,
+  },
+  pulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+    background: "#22c55e",
+    boxShadow: "0 0 6px #22c55e",
+  },
 
-  lockCard: {
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(10,14,20,0.50)",
-    borderRadius: 20,
-    padding: 20,
+  lock: {
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(10,14,20,0.5)",
+    borderRadius: 16,
+    padding: "18px 20px",
     marginBottom: 20,
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     gap: 16,
     flexWrap: "wrap",
-    backdropFilter: "blur(12px)",
   },
-  lockTitle: { color: "white", fontSize: 22, fontWeight: 800, marginBottom: 8 },
-  lockSub: {
-    color: "rgba(255,255,255,0.72)",
-    fontSize: 15,
-    maxWidth: 780,
-    lineHeight: 1.5,
-  },
-  lockActions: { display: "flex", gap: 12, flexWrap: "wrap" },
-  ctaBtn: {
-    textDecoration: "none",
-    color: "white",
-    border: "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(255,255,255,0.06)",
-    padding: "12px 16px",
-    borderRadius: 14,
-    fontWeight: 700,
-    fontSize: 14,
-  },
-  primaryBtn: {
-    background:
-      "linear-gradient(90deg, rgba(120,110,255,0.95), rgba(0,190,255,0.75))",
-    border: "1px solid rgba(120,110,255,0.45)",
-  },
+  lockT: { color: "white", fontSize: 17, fontWeight: 800, marginBottom: 4 },
+  lockS: { color: "rgba(255,255,255,0.55)", fontSize: 13, lineHeight: 1.5 },
+  lockBtns: { display: "flex", gap: 10, flexWrap: "wrap" as const },
 
-  controlCard: {
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(10,14,20,0.42)",
-    borderRadius: 20,
-    padding: 18,
-    backdropFilter: "blur(12px)",
-    marginBottom: 16,
-    display: "flex",
-    alignItems: "center",
-    gap: 16,
-    flexWrap: "wrap",
-  },
-  controlTitle: { color: "white", fontSize: 15, fontWeight: 700 },
-  stakeInputWrap: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    border: "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(255,255,255,0.04)",
-    borderRadius: 16,
-    padding: "10px 14px",
-  },
-  currency: { color: "white", fontWeight: 800, fontSize: 18 },
-  stakeInput: {
-    background: "transparent",
-    border: "none",
-    outline: "none",
-    color: "white",
-    fontSize: 18,
-    width: 80,
-  },
-
-  statsGrid: {
+  stats: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 16,
-    marginBottom: 22,
+    gridTemplateColumns: "repeat(4, minmax(0,1fr))",
+    gap: 10,
+    marginBottom: 24,
   },
   statCard: {
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(10,14,20,0.42)",
-    borderRadius: 20,
-    padding: 18,
-    backdropFilter: "blur(12px)",
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "rgba(10,14,20,0.4)",
+    borderRadius: 14,
+    padding: "14px 16px",
   },
-  statLabel: {
-    color: "rgba(255,255,255,0.58)",
-    fontSize: 13,
+  statL: { color: "rgba(255,255,255,0.45)", fontSize: 11, marginBottom: 6 },
+  statV: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: 800,
+    letterSpacing: "-0.02em",
+  },
+
+  info: {
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "rgba(10,14,20,0.4)",
+    borderRadius: 14,
+    padding: 18,
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 14,
+  },
+  infoErr: { border: "1px solid rgba(255,90,90,0.25)", color: "#ffb4b4" },
+
+  secLabel: {
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: "0.12em",
+    color: "rgba(255,255,255,0.35)",
+    textTransform: "uppercase" as const,
     marginBottom: 10,
   },
-  statValue: {
-    color: "white",
-    fontSize: 28,
-    fontWeight: 800,
-    letterSpacing: "-0.02em",
-  },
 
-  infoCard: {
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(10,14,20,0.42)",
-    borderRadius: 20,
-    padding: 18,
-    color: "white",
-    backdropFilter: "blur(12px)",
-  },
-  errorCard: { border: "1px solid rgba(255,90,90,0.30)", color: "#ffb4b4" },
-
-  grid: {
+  hotGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 20,
+    gridTemplateColumns: "repeat(3, minmax(0,1fr))",
+    gap: 10,
+    marginBottom: 28,
   },
-  card: {
-    position: "relative",
-    overflow: "hidden",
-    border: "1px solid rgba(255,255,255,0.10)",
-    background:
-      "linear-gradient(180deg, rgba(14,18,28,0.82), rgba(8,10,16,0.82))",
-    borderRadius: 24,
-    padding: 20,
-    boxShadow: "0 18px 50px rgba(0,0,0,0.28)",
-    backdropFilter: "blur(14px)",
+  hotCard: {
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(10,14,20,0.45)",
+    borderRadius: 16,
+    padding: "14px 16px",
+    cursor: "pointer",
   },
-  demoCard: { opacity: 0.78 },
-  demoOverlay: {
-    position: "absolute",
-    inset: 0,
-    background:
-      "linear-gradient(180deg, rgba(8,10,16,0.12), rgba(8,10,16,0.28))",
-    pointerEvents: "none",
-  },
-  cardTop: {
+  hotTop: {
     display: "flex",
     justifyContent: "space-between",
-    gap: 16,
-    marginBottom: 18,
-    flexWrap: "wrap",
+    alignItems: "center",
+    marginBottom: 8,
   },
-  event: {
-    color: "white",
-    fontSize: 24,
+  hotEmoji: { fontSize: 18 },
+  hotMargin: {
+    fontSize: 13,
     fontWeight: 800,
-    letterSpacing: "-0.02em",
-    marginBottom: 12,
-  },
-  metaRow: { display: "flex", gap: 8, flexWrap: "wrap" },
-  chip: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.84)",
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(255,255,255,0.05)",
+    color: "#9be7bf",
+    padding: "3px 9px",
     borderRadius: 999,
-    padding: "7px 10px",
-  },
-  metricWrap: { display: "flex", gap: 10, flexWrap: "wrap" },
-  metricBox: {
-    minWidth: 120,
-    borderRadius: 18,
-    padding: "12px 14px",
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.10)",
-  },
-  metricBoxProfit: {
     background: "rgba(0,255,140,0.08)",
-    border: "1px solid rgba(0,255,140,0.18)",
+    border: "1px solid rgba(0,255,140,0.14)",
   },
-  metricLabel: {
-    color: "rgba(255,255,255,0.58)",
+  hotEvent: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: "white",
+    marginBottom: 8,
+    lineHeight: 1.3,
+  },
+  hotRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  hotBooks: { fontSize: 11, color: "rgba(255,255,255,0.38)" },
+  hotProfit: { fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.75)" },
+  hotTime: { fontSize: 11, color: "rgba(255,255,255,0.28)", marginTop: 6 },
+
+  filtersBar: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+    gap: 12,
+    flexWrap: "wrap" as const,
+  },
+  filtersRight: { display: "flex", alignItems: "center", gap: 10 },
+  filterL: { fontSize: 12, color: "rgba(255,255,255,0.4)" },
+  sel: {
+    background: "rgba(10,14,20,0.6)",
+    border: "1px solid rgba(255,255,255,0.10)",
+    borderRadius: 10,
+    color: "white",
+    padding: "6px 10px",
+    fontSize: 13,
+    outline: "none",
+    cursor: "pointer",
+  },
+  countPill: {
     fontSize: 12,
+    color: "rgba(255,255,255,0.4)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 999,
+    padding: "4px 10px",
+  },
+
+  tableWrap: {
+    border: "1px solid rgba(255,255,255,0.07)",
+    borderRadius: 18,
+    overflow: "hidden",
+    background: "rgba(10,14,20,0.3)",
+  },
+  table: { width: "100%", borderCollapse: "collapse" as const },
+  th: {
+    fontSize: 11,
+    fontWeight: 600,
+    color: "rgba(255,255,255,0.35)",
+    textAlign: "left" as const,
+    padding: "10px 14px",
+    borderBottom: "1px solid rgba(255,255,255,0.06)",
+    letterSpacing: "0.04em",
+    background: "rgba(0,0,0,0.12)",
+  },
+  row: { borderBottom: "1px solid rgba(255,255,255,0.05)", cursor: "pointer" },
+  rowActive: { background: "rgba(120,110,255,0.07)" },
+  td: { padding: "12px 14px", verticalAlign: "middle" as const },
+  tdR: {
+    padding: "12px 14px",
+    verticalAlign: "middle" as const,
+    textAlign: "right" as const,
+  },
+  cellEvent: { fontSize: 14, fontWeight: 700, color: "white", marginBottom: 3 },
+  cellMeta: {
+    display: "flex",
+    gap: 6,
+    alignItems: "center",
+    fontSize: 11,
+    color: "rgba(255,255,255,0.38)",
+  },
+  chip: {
+    fontSize: 10,
+    padding: "2px 7px",
+    borderRadius: 999,
+    border: "1px solid rgba(255,255,255,0.09)",
+    background: "rgba(255,255,255,0.03)",
+    color: "rgba(255,255,255,0.45)",
+  },
+  cellBook: { fontSize: 13, fontWeight: 600, color: "white", marginBottom: 3 },
+  cellOdds: { color: "#98b8ff", fontWeight: 600 },
+  cellPick: { fontSize: 12, color: "rgba(255,255,255,0.45)" },
+  marginBadge: { fontSize: 14, fontWeight: 800 },
+  profitBadge: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: "rgba(255,255,255,0.85)",
+  },
+  timeBadge: { fontSize: 12, color: "rgba(255,255,255,0.4)" },
+  chevron: {
+    fontSize: 15,
+    color: "rgba(255,255,255,0.28)",
+    display: "inline-block",
+    transition: "transform 0.2s",
+  },
+  chevronOpen: { transform: "rotate(180deg)", color: "rgba(255,255,255,0.65)" },
+
+  expandRow: { background: "rgba(120,110,255,0.035)" },
+  expandCell: { padding: "0 14px 14px" },
+  expandBox: {
+    border: "1px solid rgba(120,110,255,0.16)",
+    borderRadius: 14,
+    padding: 16,
+    background: "rgba(10,14,20,0.55)",
+  },
+  expandLegs: {
+    display: "flex",
+    gap: 20,
+    alignItems: "flex-start",
+    flexWrap: "wrap" as const,
+  },
+  expandLeg: { flex: 1, minWidth: 130 },
+  expandBook: {
+    fontSize: 15,
+    fontWeight: 800,
+    color: "white",
+    marginBottom: 3,
+  },
+  expandPick: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.55)",
+    marginBottom: 10,
+  },
+  expandStat: {
+    display: "flex",
+    justifyContent: "space-between",
     marginBottom: 6,
   },
-  metricValue: { color: "white", fontSize: 22, fontWeight: 800 },
-  legsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 14,
-    marginBottom: 16,
+  expandStatL: { fontSize: 12, color: "rgba(255,255,255,0.38)" },
+  expandStatR: { fontSize: 13, fontWeight: 800, color: "white" },
+  expandStatROdds: { fontSize: 13, fontWeight: 700, color: "#98b8ff" },
+  expandVr: {
+    width: 1,
+    background: "rgba(255,255,255,0.06)",
+    alignSelf: "stretch",
   },
-  legCard: {
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(255,255,255,0.04)",
-    borderRadius: 20,
-    padding: 16,
-  },
-  legTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 10,
-    marginBottom: 12,
-    alignItems: "center",
-  },
-  book: { color: "white", fontSize: 16, fontWeight: 700 },
-  odds: { color: "#98b8ff", fontSize: 14, fontWeight: 700 },
-  pick: {
-    color: "rgba(255,255,255,0.92)",
-    fontSize: 15,
-    lineHeight: 1.45,
-    marginBottom: 16,
-    minHeight: 44,
-  },
-  stakeRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  stakeLabel: { color: "rgba(255,255,255,0.58)", fontSize: 13 },
-  stakeValue: { color: "white", fontSize: 16, fontWeight: 800 },
-  cardBottom: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    flexWrap: "wrap",
-    paddingTop: 14,
-    borderTop: "1px solid rgba(255,255,255,0.08)",
-  },
-  totalStake: { color: "rgba(255,255,255,0.68)", fontSize: 14 },
-  readyTag: {
-    color: "#9be7bf",
-    border: "1px solid rgba(0,255,140,0.18)",
-    background: "rgba(0,255,140,0.08)",
-    borderRadius: 999,
-    padding: "8px 12px",
+  expandSummary: { flex: 1, minWidth: 130 },
+  expandTip: {
+    marginTop: 12,
     fontSize: 12,
+    color: "rgba(255,255,255,0.45)",
+    borderTop: "1px solid rgba(255,255,255,0.06)",
+    paddingTop: 10,
+    lineHeight: 1.6,
+  },
+
+  btnP: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "10px 16px",
+    borderRadius: 12,
     fontWeight: 700,
+    fontSize: 14,
+    color: "white",
+    background:
+      "linear-gradient(90deg, rgba(120,110,255,0.95), rgba(0,190,255,0.75))",
+    border: "1px solid rgba(120,110,255,0.4)",
+    textDecoration: "none",
+  },
+  btnG: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "10px 16px",
+    borderRadius: 12,
+    fontWeight: 700,
+    fontSize: 14,
+    color: "rgba(255,255,255,0.8)",
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.10)",
+    textDecoration: "none",
   },
 };
