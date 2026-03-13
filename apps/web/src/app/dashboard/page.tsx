@@ -178,6 +178,68 @@ function ExpandedRow({ arb, stake }: { arb: Arb; stake: number }) {
   const profit = Number(arb.est_profit) * scale;
   const [checked, setChecked] = useState([false, false, false]);
 
+  // Clean up selection name — remove duplicate point if already in the name
+  function cleanName(name: string, point: string | null | undefined) {
+    if (!point) return name;
+    // If the name already contains the point value, don't append it
+    if (name.includes(point) || name.includes(String(parseFloat(point))))
+      return name;
+    return name;
+  }
+
+  // Generate plain-English bet description
+  function betDescription(
+    market: string,
+    name: string,
+    point: string | null | undefined
+  ) {
+    const mg = market.toLowerCase();
+    const pt = point ? parseFloat(point) : null;
+
+    if (mg.includes("spread") || mg.includes("handicap")) {
+      if (pt !== null) {
+        const side =
+          pt < 0
+            ? `${name} to win by more than ${Math.abs(pt)}`
+            : `${name} to lose by less than ${Math.abs(pt)} (or win)`;
+        return {
+          what: side,
+          label: "Handicap",
+          detail: `Line: ${pt > 0 ? "+" : ""}${pt}`,
+        };
+      }
+    }
+    if (mg === "totals" || mg === "alternate_totals") {
+      const side = name.startsWith("Over")
+        ? `Over ${pt} goals/points scored in the match`
+        : `Under ${pt} goals/points scored in the match`;
+      return { what: side, label: "Total", detail: `Line: ${pt}` };
+    }
+    if (mg === "h2h" || mg === "h2h_3way") {
+      if (name.includes("win"))
+        return {
+          what: `${name.replace(" win", "")} to win the match`,
+          label: "Match result",
+          detail: null,
+        };
+      if (name === "Draw")
+        return {
+          what: "The match ends in a draw",
+          label: "Match result",
+          detail: null,
+        };
+    }
+    if (mg.includes("h1") || mg.includes("h2")) {
+      const half = mg.includes("h1") ? "1st half" : "2nd half";
+      return { what: `${name} — ${half} result`, label: half, detail: null };
+    }
+    return {
+      what: name,
+      label: "Bet",
+      detail: point ? `Line: ${point}` : null,
+    };
+  }
+
   const legs = [
     {
       book: arb.leg1_book,
@@ -216,23 +278,24 @@ function ExpandedRow({ arb, stake }: { arb: Arb; stake: number }) {
       style={{
         border: "1px solid rgba(120,110,255,0.14)",
         borderRadius: 14,
-        padding: 16,
+        padding: 18,
         background: "rgba(8,11,18,0.6)",
       }}
     >
+      {/* Summary strip */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
+          gridTemplateColumns: "repeat(4, 1fr)",
           gap: 8,
-          marginBottom: 16,
+          marginBottom: 20,
         }}
       >
         {[
-          { l: "Total stake", v: fmt(stake) },
-          { l: "Profit", v: `+${fmt(profit)}`, green: true },
+          { l: "Stake each book", v: "See below" },
+          { l: "Guaranteed profit", v: `+${fmt(profit)}`, green: true },
           { l: "Margin", v: pct(arb.margin) },
-          { l: "Payout", v: fmt(stake + profit) },
+          { l: "Total payout", v: fmt(stake + profit) },
         ].map(({ l, v, green }) => (
           <div
             key={l}
@@ -254,7 +317,7 @@ function ExpandedRow({ arb, stake }: { arb: Arb; stake: number }) {
             </div>
             <div
               style={{
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: 800,
                 color: green ? "#9be7bf" : "white",
               }}
@@ -264,146 +327,276 @@ function ExpandedRow({ arb, stake }: { arb: Arb; stake: number }) {
           </div>
         ))}
       </div>
+
+      {/* Step by step */}
       <div
         style={{
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: 700,
           letterSpacing: "0.1em",
-          color: "rgba(255,255,255,0.3)",
-          textTransform: "uppercase",
-          marginBottom: 10,
+          color: "rgba(255,255,255,0.35)",
+          textTransform: "uppercase" as const,
+          marginBottom: 12,
         }}
       >
-        How to place this arb
+        Step-by-step placement
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {legs.map((leg, i) => (
-          <div
-            key={i}
-            style={{
-              display: "flex",
-              gap: 12,
-              padding: "14px 14px",
-              borderRadius: 12,
-              border: checked[i]
-                ? "1px solid rgba(0,255,140,0.2)"
-                : "1px solid rgba(255,255,255,0.07)",
-              background: checked[i]
-                ? "rgba(0,255,140,0.04)"
-                : "rgba(255,255,255,0.02)",
-              cursor: "pointer",
-              opacity: checked[i] ? 0.65 : 1,
-            }}
-            onClick={() =>
-              setChecked((prev) => prev.map((v, idx) => (idx === i ? !v : v)))
-            }
-          >
+
+      <div
+        style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}
+      >
+        {legs.map((leg, i) => {
+          const desc = betDescription(arb.market_group, leg.pick, leg.point);
+          return (
             <div
+              key={i}
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: 999,
-                background: checked[i]
-                  ? "rgba(0,255,140,0.15)"
-                  : "rgba(120,110,255,0.2)",
+                borderRadius: 14,
                 border: checked[i]
-                  ? "1px solid rgba(0,255,140,0.3)"
-                  : "1px solid rgba(120,110,255,0.4)",
-                color: checked[i] ? "#9be7bf" : "white",
-                fontSize: 13,
-                fontWeight: 800,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                marginTop: 2,
+                  ? "1px solid rgba(0,255,140,0.25)"
+                  : "1px solid rgba(255,255,255,0.09)",
+                background: checked[i]
+                  ? "rgba(0,255,140,0.05)"
+                  : "rgba(255,255,255,0.025)",
+                cursor: "pointer",
+                overflow: "hidden",
+                transition: "all 0.15s",
               }}
+              onClick={() =>
+                setChecked((prev) => prev.map((v, idx) => (idx === i ? !v : v)))
+              }
             >
-              {checked[i] ? "✓" : i + 1}
-            </div>
-            <div style={{ flex: 1 }}>
-              {leg.wait && (
+              {/* Step header */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "14px 16px",
+                  borderBottom: checked[i]
+                    ? "none"
+                    : "1px solid rgba(255,255,255,0.05)",
+                }}
+              >
                 <div
                   style={{
-                    fontSize: 11,
-                    color: "rgba(245,158,11,0.85)",
-                    marginBottom: 5,
-                    fontWeight: 600,
+                    width: 32,
+                    height: 32,
+                    borderRadius: 999,
+                    background: checked[i]
+                      ? "#9be7bf"
+                      : "rgba(120,110,255,0.25)",
+                    border: checked[i]
+                      ? "none"
+                      : "1px solid rgba(120,110,255,0.5)",
+                    color: checked[i] ? "#05060a" : "white",
+                    fontSize: 14,
+                    fontWeight: 900,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
-                  ⏱ Wait 20–30 seconds first
+                  {checked[i] ? "✓" : i + 1}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      flexWrap: "wrap" as const,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 16, fontWeight: 900, color: "white" }}
+                    >
+                      {leg.book}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        padding: "2px 8px",
+                        borderRadius: 999,
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        color: "rgba(255,255,255,0.55)",
+                      }}
+                    >
+                      {desc.label}
+                    </span>
+                    {leg.wait && (
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "rgba(245,158,11,0.9)",
+                          padding: "2px 8px",
+                          borderRadius: 999,
+                          background: "rgba(245,158,11,0.1)",
+                          border: "1px solid rgba(245,158,11,0.2)",
+                        }}
+                      >
+                        ⏱ Wait 20–30s first
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {/* Stake badge always visible */}
+                <div style={{ textAlign: "right" as const, flexShrink: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "rgba(255,255,255,0.4)",
+                      marginBottom: 2,
+                    }}
+                  >
+                    Stake
+                  </div>
+                  <div
+                    style={{ fontSize: 18, fontWeight: 900, color: "white" }}
+                  >
+                    £{Math.round(leg.stake)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bet details */}
+              {!checked[i] && (
+                <div
+                  style={{
+                    padding: "12px 16px 14px",
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto",
+                    gap: 12,
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.4)",
+                        marginBottom: 6,
+                      }}
+                    >
+                      What to bet on:
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 800,
+                        color: "white",
+                        lineHeight: 1.4,
+                        marginBottom: 8,
+                      }}
+                    >
+                      {desc.what}
+                    </div>
+                    {desc.detail && (
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: "rgba(255,255,255,0.5)",
+                          marginBottom: 8,
+                        }}
+                      >
+                        {desc.detail}
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                        flexWrap: "wrap" as const,
+                        alignItems: "center",
+                      }}
+                    >
+                      <div
+                        style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                      >
+                        Find it under:
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          padding: "4px 12px",
+                          borderRadius: 999,
+                          background: "rgba(120,110,255,0.15)",
+                          border: "1px solid rgba(120,110,255,0.3)",
+                          color: "#b8b0ff",
+                        }}
+                      >
+                        {arb.market_group.includes("spread")
+                          ? "Asian Handicap / Spreads"
+                          : arb.market_group.includes("total")
+                          ? "Over/Under / Totals"
+                          : arb.market_group === "h2h" ||
+                            arb.market_group === "h2h_3way"
+                          ? "Match Result / 1X2"
+                          : arb.market_group.includes("h1")
+                          ? "Half Time"
+                          : arb.market_group.includes("h2")
+                          ? "2nd Half"
+                          : "Main markets"}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" as const }}>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.4)",
+                        marginBottom: 4,
+                      }}
+                    >
+                      Accept odds of
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 24,
+                        fontWeight: 900,
+                        color: "#98b8ff",
+                        letterSpacing: "-0.5px",
+                      }}
+                    >
+                      {Number(leg.odds).toFixed(2)}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.35)",
+                        marginTop: 2,
+                      }}
+                    >
+                      or better
+                    </div>
+                  </div>
                 </div>
               )}
-              <div
-                style={{
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.6)",
-                  marginBottom: 4,
-                }}
-              >
-                Go to{" "}
-                <span style={{ color: "white", fontWeight: 700 }}>
-                  {leg.book}
-                </span>{" "}
-                and back:
-              </div>
-              <div
-                style={{
-                  fontSize: 14,
-                  fontWeight: 800,
-                  color: "white",
-                  marginBottom: 8,
-                }}
-              >
-                "{leg.pick}
-                {leg.point ? ` (${leg.point})` : ""}"
-              </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    padding: "4px 10px",
-                    borderRadius: 999,
-                    background: "rgba(120,110,255,0.15)",
-                    border: "1px solid rgba(120,110,255,0.25)",
-                    color: "#98b8ff",
-                  }}
-                >
-                  @ {Number(leg.odds).toFixed(2)}
-                </span>
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    padding: "4px 10px",
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    color: "white",
-                  }}
-                >
-                  £{Math.round(leg.stake)}
-                </span>
-              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
       {allDone && (
         <div
           style={{
-            marginTop: 12,
-            padding: "12px 14px",
+            marginTop: 14,
+            padding: "14px 16px",
             borderRadius: 12,
-            background: "rgba(0,255,140,0.07)",
-            border: "1px solid rgba(0,255,140,0.18)",
+            background: "rgba(0,255,140,0.08)",
+            border: "1px solid rgba(0,255,140,0.2)",
             fontSize: 14,
             color: "#9be7bf",
-            fontWeight: 600,
+            fontWeight: 700,
           }}
         >
-          ✅ Locked in for <strong>+{fmt(profit)}</strong> guaranteed.
+          ✅ All legs placed — you're locked in for{" "}
+          <strong>+{fmt(profit)}</strong> guaranteed profit regardless of the
+          result.
         </div>
       )}
     </div>
