@@ -1082,3 +1082,54 @@ a:hover {
     padding: 0 16px;
   }
 }
+
+/* =====================================================
+   MOBILE RESPONSIVE — paste at bottom of globals.css
+   ===================================================== */
+
+@media (max-width: 768px) {
+  /* Nav */
+  .navShell {
+    padding: 10px 14px 0;
+  }
+  .nav {
+    padding: 10px 12px;
+    border-radius: 16px;
+  }
+  .navlinks {
+    gap: 4px;
+  }
+  .navLink {
+    padding: 8px 8px;
+    font-size: 13px;
+  }
+  .tag {
+    display: none;
+  }
+
+  /* Narrow page */
+  .narrowPage {
+    padding: 20px 16px 60px;
+  }
+
+  /* Footer */
+  .footerShell {
+    padding: 0 16px;
+  }
+  .footerInner {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 600px) {
+  /* Hide tagline on very small screens */
+  .brand {
+    font-size: 15px;
+  }
+
+  /* Nav — stack auth button below if needed */
+  .navlinks {
+    flex-wrap: wrap;
+  }
+}

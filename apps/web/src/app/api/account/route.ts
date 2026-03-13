@@ -3,22 +3,42 @@ import { pool } from "../../lib/db";
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user?.email) return new Response("Unauthorized", { status: 401 });
+  if (!session?.user?.email)
+    return new Response("Unauthorized", { status: 401 });
 
-  const userId = session.user.email;
+  const email = session.user.email;
 
   const sub = await pool.query(
-    "select status, current_period_end from subscriptions where user_id=$1",
-    [userId]
+    `select status, plan, current_period_end, trial_expires_at
+     from subscriptions where user_email = $1
+     order by updated_at desc limit 1`,
+    [email]
   );
 
-  const status = sub.rowCount ? sub.rows[0].status : "inactive";
-  const currentPeriodEnd = sub.rowCount ? sub.rows[0].current_period_end : null;
+  const row = sub.rows[0];
+  const status = row?.status ?? "inactive";
+  const plan = row?.plan ?? null;
+  const currentPeriodEnd = row?.current_period_end ?? null;
+  const trialExpiresAt = row?.trial_expires_at ?? null;
+
+  const isActive = status === "active";
+  const isTrialing =
+    status === "trialing" ||
+    (trialExpiresAt && new Date(trialExpiresAt) > new Date());
+
+  let trialDaysLeft = 0;
+  if (isTrialing && trialExpiresAt) {
+    const msLeft = new Date(trialExpiresAt).getTime() - Date.now();
+    trialDaysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+  }
 
   return Response.json({
-    email: userId,
-    isPro: status === "active",
+    email,
+    plan,
     status,
-    currentPeriodEnd
+    isActive,
+    isTrialing,
+    trialDaysLeft,
+    currentPeriodEnd,
   });
 }
