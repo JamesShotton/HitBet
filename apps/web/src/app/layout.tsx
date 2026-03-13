@@ -28,9 +28,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 </Link>
 
                 <nav className="navlinks">
-                  <Link className="navLink" href="/">Home</Link>
-                  <Link className="navLink" href="/dashboard">Dashboard</Link>
-                  <Link className="navLink" href="/pricing">Plans</Link>
+                  <Link className="navLink" href="/">
+                    Home
+                  </Link>
+                  <Link className="navLink" href="/dashboard">
+                    Dashboard
+                  </Link>
+                  <Link className="navLink" href="/guide">
+                    Guide
+                  </Link>
+                  <Link className="navLink" href="/pricing">
+                    Plans
+                  </Link>
                   <AuthButton />
                 </nav>
               </div>
@@ -41,9 +50,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <footer className="footer">
               <div className="footerInner">
                 <div className="small">
-                  Informational tool only. Always verify markets, odds, rules, and settlement conditions before placing bets.
+                  Informational tool only. Always verify markets, odds, rules,
+                  and settlement conditions before placing bets.
                 </div>
-                <div className="small muted">© {new Date().getFullYear()} HitBet</div>
+                <div className="small muted">
+                  © {new Date().getFullYear()} HitBet
+                </div>
               </div>
             </footer>
           </div>
