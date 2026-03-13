@@ -118,6 +118,49 @@ function marketCategory(mg: string) {
   return "other";
 }
 
+// Curated list of UK-accessible books grouped by type
+const UK_BOOKS: { group: string; books: string[] }[] = [
+  {
+    group: "Exchanges (never ban winners)",
+    books: ["Betfair Exchange", "Smarkets", "Matchbook", "Betdaq"],
+  },
+  {
+    group: "Major UK soft books",
+    books: [
+      "Bet365",
+      "William Hill",
+      "Coral",
+      "Ladbrokes",
+      "Paddy Power",
+      "Sky Bet",
+      "Betway",
+      "Unibet (UK)",
+      "888sport",
+      "BetVictor",
+      "BoyleSports",
+      "Grosvenor",
+      "Betfred",
+      "SportNation",
+      "BetUK",
+    ],
+  },
+  {
+    group: "Other accessible books",
+    books: [
+      "Casumo",
+      "LeoVegas",
+      "Mr Green",
+      "Virgin Bet",
+      "Spreadex",
+      "QuinnBet",
+      "Midnite",
+      "Rhino.bet",
+    ],
+  },
+];
+
+const ALL_UK_BOOKS = UK_BOOKS.flatMap((g) => g.books);
+
 const MARKET_CATEGORIES = [
   { key: "all", label: "All markets" },
   { key: "moneyline", label: "Moneyline" },
@@ -714,6 +757,7 @@ export default function DashboardPage() {
   const [expandedId, setExpandedId] = useState<string | number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false); // closed by default on mobile
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [booksModalOpen, setBooksModalOpen] = useState(false);
   // myBooks = set of books the user has accounts with
   // null = not yet configured (show all arbs until they set up)
   const [myBooks, setMyBooks] = useState<Set<string> | null>(null);
@@ -800,13 +844,15 @@ export default function DashboardPage() {
   );
 
   const allBooks = useMemo(() => {
-    const set = new Set<string>();
+    // Start with curated UK books list
+    const base = new Set<string>(ALL_UK_BOOKS);
+    // Add any books appearing in the feed that aren't in our list
     for (const a of [...arbs2, ...arbs3]) {
-      if (a.leg1_book) set.add(a.leg1_book);
-      if (a.leg2_book) set.add(a.leg2_book);
-      if (a.leg3_book) set.add(a.leg3_book);
+      if (a.leg1_book) base.add(a.leg1_book);
+      if (a.leg2_book) base.add(a.leg2_book);
+      if (a.leg3_book) base.add(a.leg3_book);
     }
-    return Array.from(set).sort();
+    return Array.from(base);
   }, [arbs2, arbs3]);
 
   const filtered = useMemo(
@@ -1100,130 +1146,61 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {allBooks.length > 0 && (
-        <div style={{ padding: "14px 16px 0" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: "0.1em",
-                color: "rgba(255,255,255,0.3)",
-                textTransform: "uppercase" as const,
-              }}
-            >
-              My books
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button
-                onClick={() => selectAllBooks(allBooks)}
-                style={{
-                  fontSize: 10,
-                  color: "rgba(255,255,255,0.4)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  textDecoration: "underline",
-                }}
-              >
-                All
-              </button>
-              {booksConfigured && (
-                <button
-                  onClick={clearMyBooks}
-                  style={{
-                    fontSize: 10,
-                    color: "rgba(255,255,255,0.4)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    textDecoration: "underline",
-                  }}
-                >
-                  Reset
-                </button>
-              )}
-            </div>
-          </div>
-          {!booksConfigured && (
-            <div
-              style={{
-                fontSize: 11,
-                color: "rgba(255,255,255,0.35)",
-                marginBottom: 8,
-                lineHeight: 1.5,
-                padding: "8px 10px",
-                borderRadius: 8,
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              Tick the books you have accounts with — only those arbs will show.
-            </div>
-          )}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column" as const,
-              gap: 3,
-              maxHeight: 220,
-              overflowY: "auto" as const,
-            }}
-          >
-            {allBooks.map((book) => {
-              const has = myBooks === null ? false : myBooks.has(book);
-              return (
-                <button
-                  key={book}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    width: "100%",
-                    padding: "7px 10px",
-                    borderRadius: 8,
-                    border: has
-                      ? "1px solid rgba(0,255,140,0.25)"
-                      : "1px solid rgba(255,255,255,0.06)",
-                    background: has
-                      ? "rgba(0,255,140,0.07)"
-                      : "rgba(255,255,255,0.02)",
-                    color: has ? "#9be7bf" : "rgba(255,255,255,0.5)",
-                    fontSize: 12,
-                    cursor: "pointer",
-                    textAlign: "left" as const,
-                    transition: "all 0.1s",
-                  }}
-                  onClick={() => toggleMyBook(book)}
-                >
-                  <span>{book}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700 }}>
-                    {has ? "✓" : ""}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          {booksConfigured && myBooks !== null && (
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 11,
-                color: "rgba(255,255,255,0.35)",
-              }}
-            >
-              {myBooks.size} of {allBooks.length} books selected
-            </div>
-          )}
+      <div style={{ padding: "14px 16px 0" }}>
+        <div
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: "0.1em",
+            color: "rgba(255,255,255,0.3)",
+            textTransform: "uppercase" as const,
+            marginBottom: 8,
+          }}
+        >
+          My books
         </div>
-      )}
+        <button
+          onClick={() => setBooksModalOpen(true)}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            borderRadius: 11,
+            border: booksConfigured
+              ? "1px solid rgba(0,255,140,0.25)"
+              : "1px solid rgba(255,255,255,0.1)",
+            background: booksConfigured
+              ? "rgba(0,255,140,0.06)"
+              : "rgba(255,255,255,0.03)",
+            color: booksConfigured ? "#9be7bf" : "rgba(255,255,255,0.6)",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            textAlign: "left" as const,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <span>
+            {booksConfigured && myBooks !== null
+              ? `${myBooks.size} books selected`
+              : "Select your books"}
+          </span>
+          <span style={{ fontSize: 12, opacity: 0.6 }}>✎</span>
+        </button>
+        {!booksConfigured && (
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 11,
+              color: "rgba(255,255,255,0.3)",
+              lineHeight: 1.5,
+            }}
+          >
+            Only see arbs you can place
+          </div>
+        )}
+      </div>
 
       <div
         style={{
@@ -1252,6 +1229,268 @@ export default function DashboardPage() {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
+      {/* ── My Books Modal ── */}
+      {booksModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.7)",
+              backdropFilter: "blur(4px)",
+            }}
+            onClick={() => setBooksModalOpen(false)}
+          />
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              maxWidth: 520,
+              maxHeight: "85vh",
+              background: "rgba(10,14,22,0.98)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 22,
+              display: "flex",
+              flexDirection: "column" as const,
+              overflow: "hidden",
+              boxShadow: "0 30px 80px rgba(0,0,0,0.6)",
+            }}
+          >
+            {/* Modal header */}
+            <div
+              style={{
+                padding: "20px 22px 16px",
+                borderBottom: "1px solid rgba(255,255,255,0.07)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 800,
+                    color: "white",
+                    marginBottom: 4,
+                  }}
+                >
+                  My bookmakers
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
+                  Tick the books you have accounts with — only matching arbs
+                  will show.
+                </div>
+              </div>
+              <button
+                onClick={() => setBooksModalOpen(false)}
+                style={{
+                  background: "none",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 8,
+                  color: "rgba(255,255,255,0.5)",
+                  cursor: "pointer",
+                  fontSize: 16,
+                  padding: "4px 9px",
+                  marginLeft: 12,
+                  flexShrink: 0,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Book list */}
+            <div
+              style={{
+                overflowY: "auto" as const,
+                flex: 1,
+                padding: "12px 22px",
+              }}
+            >
+              {UK_BOOKS.map((group) => (
+                <div key={group.group} style={{ marginBottom: 20 }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: "0.1em",
+                      color: "rgba(255,255,255,0.35)",
+                      textTransform: "uppercase" as const,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {group.group}
+                  </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, 1fr)",
+                      gap: 6,
+                    }}
+                  >
+                    {group.books.map((book) => {
+                      const has = myBooks?.has(book) ?? false;
+                      const inFeed = [...arbs2, ...arbs3].some(
+                        (a) =>
+                          a.leg1_book === book ||
+                          a.leg2_book === book ||
+                          a.leg3_book === book
+                      );
+                      return (
+                        <button
+                          key={book}
+                          onClick={() => toggleMyBook(book)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            padding: "10px 12px",
+                            borderRadius: 11,
+                            border: has
+                              ? "1px solid rgba(0,255,140,0.3)"
+                              : "1px solid rgba(255,255,255,0.08)",
+                            background: has
+                              ? "rgba(0,255,140,0.08)"
+                              : "rgba(255,255,255,0.02)",
+                            color: has ? "#9be7bf" : "rgba(255,255,255,0.7)",
+                            fontSize: 13,
+                            fontWeight: has ? 700 : 400,
+                            cursor: "pointer",
+                            textAlign: "left" as const,
+                            transition: "all 0.1s",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 16,
+                              height: 16,
+                              borderRadius: 4,
+                              border: has
+                                ? "none"
+                                : "1px solid rgba(255,255,255,0.2)",
+                              background: has ? "#9be7bf" : "transparent",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              fontSize: 10,
+                              color: "#05060a",
+                              fontWeight: 900,
+                            }}
+                          >
+                            {has ? "✓" : ""}
+                          </span>
+                          <span style={{ flex: 1 }}>{book}</span>
+                          {inFeed && (
+                            <span
+                              style={{
+                                fontSize: 9,
+                                padding: "1px 5px",
+                                borderRadius: 999,
+                                background: "rgba(120,110,255,0.15)",
+                                border: "1px solid rgba(120,110,255,0.2)",
+                                color: "rgba(180,170,255,0.8)",
+                                fontWeight: 700,
+                              }}
+                            >
+                              LIVE
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Modal footer */}
+            <div
+              style={{
+                padding: "14px 22px",
+                borderTop: "1px solid rgba(255,255,255,0.07)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
+                {myBooks !== null
+                  ? `${myBooks.size} selected`
+                  : "None selected — showing all arbs"}
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {booksConfigured && (
+                  <button
+                    onClick={() => {
+                      clearMyBooks();
+                      setBooksModalOpen(false);
+                    }}
+                    style={{
+                      padding: "9px 14px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      background: "transparent",
+                      color: "rgba(255,255,255,0.5)",
+                      fontSize: 13,
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Show all
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    selectAllBooks(allBooks);
+                  }}
+                  style={{
+                    padding: "9px 14px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "rgba(255,255,255,0.05)",
+                    color: "rgba(255,255,255,0.7)",
+                    fontSize: 13,
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  Select all
+                </button>
+                <button
+                  onClick={() => setBooksModalOpen(false)}
+                  style={{
+                    padding: "9px 18px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(120,110,255,0.4)",
+                    background:
+                      "linear-gradient(90deg, rgba(120,110,255,0.95), rgba(0,190,255,0.75))",
+                    color: "white",
+                    fontSize: 13,
+                    cursor: "pointer",
+                    fontWeight: 700,
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Mobile filter drawer overlay ── */}
       {mob && filterDrawerOpen && (
         <div
@@ -1824,9 +2063,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <button
-              onClick={() =>
-                mob ? setFilterDrawerOpen(true) : setSidebarOpen(true)
-              }
+              onClick={() => setBooksModalOpen(true)}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
