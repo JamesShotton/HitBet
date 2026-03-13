@@ -714,7 +714,51 @@ export default function DashboardPage() {
   const [expandedId, setExpandedId] = useState<string | number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false); // closed by default on mobile
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  const [excludedBooks, setExcludedBooks] = useState<Set<string>>(new Set());
+  // myBooks = set of books the user has accounts with
+  // null = not yet configured (show all arbs until they set up)
+  const [myBooks, setMyBooks] = useState<Set<string> | null>(null);
+  const [booksConfigured, setBooksConfigured] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("hitbet_my_books");
+      if (saved !== null) {
+        setMyBooks(new Set(JSON.parse(saved)));
+        setBooksConfigured(true);
+      }
+    } catch {}
+  }, []);
+
+  function saveMyBooks(books: Set<string>) {
+    setMyBooks(books);
+    setBooksConfigured(true);
+    try {
+      localStorage.setItem(
+        "hitbet_my_books",
+        JSON.stringify(Array.from(books))
+      );
+    } catch {}
+  }
+
+  function toggleMyBook(book: string) {
+    const current = myBooks ?? new Set<string>();
+    const next = new Set(current);
+    if (next.has(book)) next.delete(book);
+    else next.add(book);
+    saveMyBooks(next);
+  }
+
+  function selectAllBooks(books: string[]) {
+    saveMyBooks(new Set(books));
+  }
+
+  function clearMyBooks() {
+    setMyBooks(null);
+    setBooksConfigured(false);
+    try {
+      localStorage.removeItem("hitbet_my_books");
+    } catch {}
+  }
 
   const load = useCallback(async () => {
     try {
@@ -765,15 +809,6 @@ export default function DashboardPage() {
     return Array.from(set).sort();
   }, [arbs2, arbs3]);
 
-  function toggleBook(book: string) {
-    setExcludedBooks((prev) => {
-      const next = new Set(prev);
-      if (next.has(book)) next.delete(book);
-      else next.add(book);
-      return next;
-    });
-  }
-
   const filtered = useMemo(
     () =>
       activeArbs.filter((a) => {
@@ -781,15 +816,16 @@ export default function DashboardPage() {
         if (sportFilter !== "all" && a.sport_key !== sportFilter) return false;
         if (marketCat !== "all" && marketCategory(a.market_group) !== marketCat)
           return false;
-        if (excludedBooks.size > 0) {
+        // If user has configured their books, only show arbs where ALL legs are in their books
+        if (myBooks !== null && myBooks.size > 0) {
           const books = [a.leg1_book, a.leg2_book, a.leg3_book].filter(
             Boolean
           ) as string[];
-          if (books.some((b) => excludedBooks.has(b))) return false;
+          if (!books.every((b) => myBooks.has(b))) return false;
         }
         return true;
       }),
-    [activeArbs, minMarginPct, sportFilter, marketCat, excludedBooks]
+    [activeArbs, minMarginPct, sportFilter, marketCat, myBooks]
   );
 
   const catCounts = useMemo(() => {
@@ -1071,7 +1107,7 @@ export default function DashboardPage() {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: 8,
+              marginBottom: 6,
             }}
           >
             <div
@@ -1083,11 +1119,11 @@ export default function DashboardPage() {
                 textTransform: "uppercase" as const,
               }}
             >
-              Exclude books
+              My books
             </div>
-            {excludedBooks.size > 0 && (
+            <div style={{ display: "flex", gap: 6 }}>
               <button
-                onClick={() => setExcludedBooks(new Set())}
+                onClick={() => selectAllBooks(allBooks)}
                 style={{
                   fontSize: 10,
                   color: "rgba(255,255,255,0.4)",
@@ -1097,51 +1133,95 @@ export default function DashboardPage() {
                   textDecoration: "underline",
                 }}
               >
-                Clear ({excludedBooks.size})
+                All
               </button>
-            )}
+              {booksConfigured && (
+                <button
+                  onClick={clearMyBooks}
+                  style={{
+                    fontSize: 10,
+                    color: "rgba(255,255,255,0.4)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
           </div>
+          {!booksConfigured && (
+            <div
+              style={{
+                fontSize: 11,
+                color: "rgba(255,255,255,0.35)",
+                marginBottom: 8,
+                lineHeight: 1.5,
+                padding: "8px 10px",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              Tick the books you have accounts with — only those arbs will show.
+            </div>
+          )}
           <div
             style={{
               display: "flex",
               flexDirection: "column" as const,
               gap: 3,
-              maxHeight: 200,
+              maxHeight: 220,
               overflowY: "auto" as const,
             }}
           >
-            {allBooks.map((book) => (
-              <button
-                key={book}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  width: "100%",
-                  padding: "6px 10px",
-                  borderRadius: 8,
-                  border: excludedBooks.has(book)
-                    ? "1px solid rgba(255,90,90,0.3)"
-                    : "1px solid rgba(255,255,255,0.06)",
-                  background: excludedBooks.has(book)
-                    ? "rgba(255,90,90,0.08)"
-                    : "rgba(255,255,255,0.02)",
-                  color: excludedBooks.has(book)
-                    ? "rgba(255,130,130,0.9)"
-                    : "rgba(255,255,255,0.6)",
-                  fontSize: 12,
-                  cursor: "pointer",
-                  textAlign: "left" as const,
-                }}
-                onClick={() => toggleBook(book)}
-              >
-                <span>{book}</span>
-                <span style={{ fontSize: 11, opacity: 0.6 }}>
-                  {excludedBooks.has(book) ? "✕" : ""}
-                </span>
-              </button>
-            ))}
+            {allBooks.map((book) => {
+              const has = myBooks === null ? false : myBooks.has(book);
+              return (
+                <button
+                  key={book}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                    padding: "7px 10px",
+                    borderRadius: 8,
+                    border: has
+                      ? "1px solid rgba(0,255,140,0.25)"
+                      : "1px solid rgba(255,255,255,0.06)",
+                    background: has
+                      ? "rgba(0,255,140,0.07)"
+                      : "rgba(255,255,255,0.02)",
+                    color: has ? "#9be7bf" : "rgba(255,255,255,0.5)",
+                    fontSize: 12,
+                    cursor: "pointer",
+                    textAlign: "left" as const,
+                    transition: "all 0.1s",
+                  }}
+                  onClick={() => toggleMyBook(book)}
+                >
+                  <span>{book}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>
+                    {has ? "✓" : ""}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+          {booksConfigured && myBooks !== null && (
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 11,
+                color: "rgba(255,255,255,0.35)",
+              }}
+            >
+              {myBooks.size} of {allBooks.length} books selected
+            </div>
+          )}
         </div>
       )}
 
@@ -1379,13 +1459,13 @@ export default function DashboardPage() {
                 {minMarginPct > 0 ||
                 marketCat !== "all" ||
                 sportFilter !== "all" ||
-                excludedBooks.size > 0
+                booksConfigured
                   ? `(${
                       [
                         minMarginPct > 0,
                         marketCat !== "all",
                         sportFilter !== "all",
-                        excludedBooks.size > 0,
+                        booksConfigured,
                       ].filter(Boolean).length
                     })`
                   : ""}
@@ -1708,6 +1788,62 @@ export default function DashboardPage() {
                 flex: 1,
               }}
             />
+          </div>
+        )}
+
+        {/* My books setup prompt */}
+        {!loading && !booksConfigured && allBooks.length > 0 && (
+          <div
+            style={{
+              border: "1px solid rgba(120,110,255,0.2)",
+              background: "rgba(120,110,255,0.06)",
+              borderRadius: 14,
+              padding: "14px 18px",
+              marginBottom: 14,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap" as const,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "white",
+                  marginBottom: 3,
+                }}
+              >
+                Set up your books
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+                Tick which bookmakers you have accounts with to only see arbs
+                you can actually place.
+              </div>
+            </div>
+            <button
+              onClick={() =>
+                mob ? setFilterDrawerOpen(true) : setSidebarOpen(true)
+              }
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "9px 14px",
+                borderRadius: 11,
+                fontWeight: 700,
+                fontSize: 13,
+                color: "white",
+                background:
+                  "linear-gradient(90deg, rgba(120,110,255,0.95), rgba(0,190,255,0.75))",
+                border: "1px solid rgba(120,110,255,0.4)",
+                cursor: "pointer",
+                whiteSpace: "nowrap" as const,
+              }}
+            >
+              Select my books
+            </button>
           </div>
         )}
 
