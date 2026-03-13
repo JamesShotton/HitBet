@@ -3,8 +3,7 @@ import { pool } from "../../lib/db";
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user?.email)
-    return new Response("Unauthorized", { status: 401 });
+  if (!session?.user?.email) return new Response("Unauthorized", { status: 401 });
 
   const email = session.user.email;
 

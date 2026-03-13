@@ -6,9 +6,21 @@ import { Inter } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
+export const metadata = {
+  title: "HitBet — Live Arbitrage Feed",
+  description:
+    "Scan 40+ sportsbooks in real time. Guaranteed profit, pure maths.",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html>
+    <html lang="en">
       <body className={inter.className}>
         <Providers>
           <div className="bgGlow" aria-hidden />
