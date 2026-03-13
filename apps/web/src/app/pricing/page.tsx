@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 export default function PricingPage() {
   const router = useRouter();
 
-  function go(plan: "pro" | "elite") {
-    router.push(`/checkout?plan=${plan}`);
+  function go(plan: "pro" | "elite", trial = false) {
+    router.push(`/checkout?plan=${plan}${trial ? "&trial=true" : ""}`);
   }
 
   return (
@@ -15,7 +15,7 @@ export default function PricingPage() {
         <div style={styles.header}>
           <h1 style={styles.h1}>Choose your plan</h1>
           <p style={styles.sub}>
-            No free tier. Built for real execution. Cancel anytime.
+            Try free for 7 days. Card required — cancels automatically if you don't continue.
           </p>
         </div>
 
@@ -29,7 +29,6 @@ export default function PricingPage() {
                   2-outcome arbs only (cleanest execution)
                 </div>
               </div>
-
               <div style={styles.priceBlock}>
                 <div style={styles.price}>£39.99</div>
                 <div style={styles.per}>/month</div>
@@ -46,12 +45,23 @@ export default function PricingPage() {
             </ul>
 
             <div style={styles.cardBottom}>
-              <button style={{ ...styles.btn, ...styles.btnPrimary }} className='btn primary' onClick={() => go("pro")}>
-                Start Pro
+              <button
+                style={{ ...styles.btn, ...styles.btnPrimary }}
+                className="btn primary"
+                onClick={() => go("pro", true)}
+              >
+                Try free — 7 days
               </button>
-              <button style={{ ...styles.btn, ...styles.btnGhost }} onClick={() => router.push("/dashboard")}>
-                See dashboard
+              <button
+                style={{ ...styles.btn, ...styles.btnGhost }}
+                onClick={() => go("pro")}
+              >
+                Subscribe now
               </button>
+            </div>
+
+            <div style={styles.trialNote}>
+              Then £39.99/month. Cancel anytime.
             </div>
           </div>
 
@@ -64,7 +74,6 @@ export default function PricingPage() {
                 <div style={styles.planName}>Elite</div>
                 <div style={styles.planDesc}>Expanded markets + curated angles</div>
               </div>
-
               <div style={styles.priceBlock}>
                 <div style={styles.price}>£59.99</div>
                 <div style={styles.per}>/month</div>
@@ -76,15 +85,28 @@ export default function PricingPage() {
             <div style={styles.smallLabel}>Everything in Pro, plus:</div>
             <ul style={styles.ul}>
               <li style={styles.li}>3-way markets (where available)</li>
-              <li style={styles.li}>Higher-variance “value” watchlist (not guaranteed)</li>
+              <li style={styles.li}>Higher-variance "value" watchlist (not guaranteed)</li>
               <li style={styles.li}>Priority alerts (Telegram/email)</li>
             </ul>
 
             <div style={styles.cardBottom}>
-              <button style={{ ...styles.btn, ...styles.btnPrimary }} className='btn primary' onClick={() => go("elite")}>
-                Start Elite
+              <button
+                style={{ ...styles.btn, ...styles.btnPrimary }}
+                className="btn primary"
+                onClick={() => go("elite", true)}
+              >
+                Try free — 7 days
               </button>
-              <div style={styles.miniNote}>Best for serious operators.</div>
+              <button
+                style={{ ...styles.btn, ...styles.btnGhost }}
+                onClick={() => go("elite")}
+              >
+                Subscribe now
+              </button>
+            </div>
+
+            <div style={styles.trialNote}>
+              Then £59.99/month. Cancel anytime.
             </div>
           </div>
         </div>
@@ -104,9 +126,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "center",
     padding: "60px 24px",
   },
-  wrap: {
-    width: "min(1100px, 100%)",
-  },
+  wrap: { width: "min(1100px, 100%)" },
   header: { marginBottom: 22 },
   h1: { fontSize: 44, lineHeight: 1.05, margin: 0, fontWeight: 800, letterSpacing: -0.6 },
   sub: { margin: "10px 0 0", opacity: 0.8, fontSize: 16 },
@@ -163,7 +183,6 @@ const styles: Record<string, React.CSSProperties> = {
   per: { fontSize: 12, opacity: 0.75, marginTop: 4 },
 
   hr: { height: 1, background: "rgba(255,255,255,0.10)", margin: "16px 0" },
-
   smallLabel: { fontSize: 12, opacity: 0.75, marginBottom: 10 },
 
   ul: { margin: 0, paddingLeft: 18, display: "grid", gap: 8, flex: 1 },
@@ -175,6 +194,12 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: 10,
     flexWrap: "wrap",
+  },
+
+  trialNote: {
+    marginTop: 10,
+    fontSize: 12,
+    opacity: 0.55,
   },
 
   btn: {
@@ -192,8 +217,6 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: "0 12px 35px rgba(80,120,255,0.25)",
   },
   btnGhost: { opacity: 0.9 },
-
-  miniNote: { fontSize: 12, opacity: 0.7 },
 
   footerNote: { marginTop: 14, fontSize: 12, opacity: 0.7 },
 };

@@ -27,6 +27,7 @@ export async function POST(req: Request) {
   }
 
   try {
+    // ── Checkout completed (first time, includes trials) ──────────────────
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
@@ -35,10 +36,23 @@ export async function POST(req: Request) {
         session.metadata?.user_email ||
         null;
 
-      const plan =
-        session.metadata?.plan === "elite" ? "elite" : "pro";
+      const plan = session.metadata?.plan === "elite" ? "elite" : "pro";
+      const isTrial = session.metadata?.is_trial === "true";
 
       if (email) {
+        // Fetch the subscription to get trial_end
+        let trialExpiresAt: string | null = null;
+
+        if (typeof session.subscription === "string") {
+          const sub = await stripe.subscriptions.retrieve(session.subscription);
+          if (sub.trial_end) {
+            trialExpiresAt = new Date(sub.trial_end * 1000).toISOString();
+          }
+        }
+
+        const status =
+          isTrial ? "trialing" : "active";
+
         await pool.query(
           `
           insert into subscriptions (
@@ -47,55 +61,69 @@ export async function POST(req: Request) {
             plan,
             stripe_customer_id,
             stripe_subscription_id,
+            trial_expires_at,
             updated_at
           )
-          values ($1, 'active', $2, $3, $4, now())
+          values ($1, $2, $3, $4, $5, $6, now())
           on conflict (user_email)
           do update set
-            status = 'active',
+            status = excluded.status,
             plan = excluded.plan,
             stripe_customer_id = excluded.stripe_customer_id,
             stripe_subscription_id = excluded.stripe_subscription_id,
+            trial_expires_at = coalesce(excluded.trial_expires_at, subscriptions.trial_expires_at),
             updated_at = now()
           `,
           [
             email,
+            status,
             plan,
             typeof session.customer === "string" ? session.customer : null,
             typeof session.subscription === "string" ? session.subscription : null,
+            trialExpiresAt,
           ]
         );
       }
     }
 
+    // ── Subscription updated (trial → active, cancellations, etc) ─────────
+    if (event.type === "customer.subscription.updated") {
+      const subscription = event.data.object as Stripe.Subscription;
+
+      const status =
+        subscription.status === "active" || subscription.status === "trialing"
+          ? subscription.status
+          : "inactive";
+
+      // When trial converts to active, clear trial_expires_at
+      const trialEnded =
+        subscription.status === "active" &&
+        !subscription.trial_end;
+
+      await pool.query(
+        `
+        update subscriptions
+        set
+          status = $1,
+          trial_expires_at = case when $2 then null else trial_expires_at end,
+          updated_at = now()
+        where stripe_subscription_id = $3
+        `,
+        [status, trialEnded, subscription.id]
+      );
+    }
+
+    // ── Subscription deleted (cancelled / payment failed) ─────────────────
     if (event.type === "customer.subscription.deleted") {
       const subscription = event.data.object as Stripe.Subscription;
 
       await pool.query(
         `
         update subscriptions
-        set status = 'inactive', updated_at = now()
+        set status = 'inactive', trial_expires_at = null, updated_at = now()
         where stripe_subscription_id = $1
         `,
         [subscription.id]
-      );
-    }
-
-    if (event.type === "customer.subscription.updated") {
-      const subscription = event.data.object as Stripe.Subscription;
-
-      const status =
-        subscription.status === "active" || subscription.status === "trialing"
-          ? "active"
-          : "inactive";
-
-      await pool.query(
-        `
-        update subscriptions
-        set status = $1, updated_at = now()
-        where stripe_subscription_id = $2
-        `,
-        [status, subscription.id]
       );
     }
 

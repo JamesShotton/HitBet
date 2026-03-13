@@ -12,12 +12,10 @@ function demoArbs() {
       margin: 0.021,
       est_profit: 1.12,
       total_stake: 50,
-
       leg1_name: "Arsenal win",
       leg1_book: "Bet365",
       leg1_odds: 2.05,
       leg1_stake: 24.63,
-
       leg2_name: "Chelsea win",
       leg2_book: "Unibet",
       leg2_odds: 2.1,
@@ -36,13 +34,15 @@ export async function GET() {
         active: false,
         demo: true,
         plan: null,
+        trial: false,
+        trialDaysLeft: 0,
         arbs: demoArbs(),
       });
     }
 
     const sub = await pool.query(
       `
-      select status, plan
+      select status, plan, trial_expires_at
       from subscriptions
       where user_email = $1
       order by updated_at desc
@@ -51,15 +51,34 @@ export async function GET() {
       [session.user.email]
     );
 
-    const active = sub.rows[0]?.status === "active";
-    const plan = sub.rows[0]?.plan ?? null;
+    const row = sub.rows[0];
+    const status = row?.status ?? null;
+    const plan = row?.plan ?? null;
+    const trialExpiresAt = row?.trial_expires_at ?? null;
 
-    if (!active) {
+    // User is active if: status is active, trialing, OR trial hasn't expired yet
+    const isActive = status === "active";
+    const isTrialing =
+      status === "trialing" ||
+      (trialExpiresAt && new Date(trialExpiresAt) > new Date());
+
+    const hasAccess = isActive || isTrialing;
+
+    // Calculate days left in trial
+    let trialDaysLeft = 0;
+    if (isTrialing && trialExpiresAt) {
+      const msLeft = new Date(trialExpiresAt).getTime() - Date.now();
+      trialDaysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+    }
+
+    if (!hasAccess) {
       return Response.json({
         signedIn: true,
         active: false,
         demo: true,
         plan,
+        trial: false,
+        trialDaysLeft: 0,
         arbs: demoArbs(),
       });
     }
@@ -76,17 +95,20 @@ export async function GET() {
       active: true,
       demo: false,
       plan,
+      trial: isTrialing && !isActive,
+      trialDaysLeft,
       arbs: result.rows,
     });
   } catch (err) {
     console.error("API /api/arbs failed:", err);
-
     return Response.json(
       {
         signedIn: false,
         active: false,
         demo: true,
         plan: null,
+        trial: false,
+        trialDaysLeft: 0,
         arbs: [],
         error: "Failed to load arbs",
       },
