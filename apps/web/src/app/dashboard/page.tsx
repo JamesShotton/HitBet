@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, useCallback } from "react";
 
-// ─── Types ───────────────────────────────────────────────────
-
 type Arb = {
   id?: number | string;
   event: string;
@@ -42,8 +40,6 @@ type ApiResponse = {
   arbs3way: Arb[];
   error?: string;
 };
-
-// ─── Helpers ─────────────────────────────────────────────────
 
 const fmt = (v: number) => `£${v.toFixed(2)}`;
 const pct = (v: number) => `${(v * 100).toFixed(2)}%`;
@@ -127,22 +123,15 @@ const MARKET_CATEGORIES = [
   { key: "props", label: "Player Props" },
 ];
 
-// ─── Expanded row ────────────────────────────────────────────
+// ── Placement card ────────────────────────────────────────────
 
-function ExpandedRow({
-  arb,
-  stake,
-  demo,
-}: {
-  arb: Arb;
-  stake: number;
-  demo: boolean;
-}) {
+function ExpandedRow({ arb, stake }: { arb: Arb; stake: number }) {
   const scale = stake / (Number(arb.total_stake ?? 50) || 50);
   const s1 = Number(arb.leg1_stake) * scale;
   const s2 = Number(arb.leg2_stake) * scale;
   const s3 = arb.leg3_stake ? Number(arb.leg3_stake) * scale : null;
   const profit = Number(arb.est_profit) * scale;
+  const [checked, setChecked] = useState([false, false, false]);
 
   const legs = [
     {
@@ -150,83 +139,114 @@ function ExpandedRow({
       pick: arb.leg1_name,
       odds: arb.leg1_odds,
       stake: s1,
+      point: arb.leg1_point,
+      wait: false,
     },
     {
       book: arb.leg2_book,
       pick: arb.leg2_name,
       odds: arb.leg2_odds,
       stake: s2,
+      point: arb.leg2_point,
+      wait: true,
     },
     ...(arb.legs === 3 && arb.leg3_book
       ? [
           {
-            book: arb.leg3_book,
+            book: arb.leg3_book!,
             pick: arb.leg3_name!,
             odds: arb.leg3_odds!,
             stake: s3!,
+            point: null,
+            wait: true,
           },
         ]
       : []),
   ];
 
+  const allDone = legs.every((_, i) => checked[i]);
+
   return (
-    <div style={d.expBox}>
-      <div style={d.expLegs}>
-        {legs.map((leg, i) => (
-          <div key={i} style={d.expLeg}>
-            <div style={d.expBook}>{leg.book}</div>
-            <div style={d.expPick}>{leg.pick}</div>
-            <div style={d.expLine}>
-              <span style={d.expL}>Odds</span>
-              <span style={d.expOdds}>@ {Number(leg.odds).toFixed(2)}</span>
-            </div>
-            <div style={d.expLine}>
-              <span style={d.expL}>Stake</span>
-              <span style={d.expV}>{fmt(leg.stake)}</span>
+    <div style={s.expBox}>
+      {/* Summary strip */}
+      <div style={s.expStrip}>
+        {[
+          { l: "Total stake", v: fmt(stake) },
+          { l: "Guaranteed profit", v: `+${fmt(profit)}`, green: true },
+          { l: "Margin", v: pct(arb.margin) },
+          { l: "Payout if any leg wins", v: fmt(stake + profit) },
+        ].map(({ l, v, green }) => (
+          <div key={l} style={s.expStripItem}>
+            <div style={s.expStripL}>{l}</div>
+            <div
+              style={{ ...s.expStripV, ...(green ? { color: "#9be7bf" } : {}) }}
+            >
+              {v}
             </div>
           </div>
         ))}
-        <div style={d.expVr} />
-        <div style={d.expSummary}>
-          <div style={d.expLine}>
-            <span style={d.expL}>Total stake</span>
-            <span style={d.expV}>{fmt(stake)}</span>
-          </div>
-          <div style={d.expLine}>
-            <span style={d.expL}>Profit</span>
-            <span style={{ ...d.expV, color: "#9be7bf" }}>+{fmt(profit)}</span>
-          </div>
-          <div style={d.expLine}>
-            <span style={d.expL}>Margin</span>
-            <span style={d.expV}>{pct(arb.margin)}</span>
-          </div>
-        </div>
       </div>
-      {!demo && (
-        <div style={d.expTip}>
-          💡 Place <b>{arb.leg1_book}</b>
-          {arb.legs === 3
-            ? ` → ${arb.leg2_book} → ${arb.leg3_book}`
-            : ` → ${arb.leg2_book}`}{" "}
-          with 20–30s gaps. Round stakes to nearest £1.
+
+      {/* Steps */}
+      <div style={s.expStepsLabel}>How to place this arb</div>
+      <div style={s.expSteps}>
+        {legs.map((leg, i) => (
+          <div
+            key={i}
+            style={{ ...s.expStep, ...(checked[i] ? s.expStepDone : {}) }}
+            onClick={() =>
+              setChecked((prev) => prev.map((v, idx) => (idx === i ? !v : v)))
+            }
+          >
+            <div style={{ ...s.expNum, ...(checked[i] ? s.expNumDone : {}) }}>
+              {checked[i] ? "✓" : i + 1}
+            </div>
+            <div style={s.expBody}>
+              {leg.wait && (
+                <div style={s.expWait}>
+                  ⏱ Wait 20–30 seconds before placing this leg
+                </div>
+              )}
+              <div style={s.expAction}>
+                Go to <span style={s.expBookName}>{leg.book}</span> and back:
+              </div>
+              <div style={s.expSelection}>
+                "{leg.pick}
+                {leg.point ? ` (${leg.point})` : ""}"
+              </div>
+              <div style={s.expChips}>
+                <span style={s.expOddsChip}>
+                  Odds: {Number(leg.odds).toFixed(2)}
+                </span>
+                <span style={s.expStakeChip}>
+                  Stake: £{Math.round(leg.stake)}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {allDone && (
+        <div style={s.expDone}>
+          ✅ All legs placed — locked in for <strong>+{fmt(profit)}</strong>{" "}
+          guaranteed profit regardless of result.
         </div>
       )}
     </div>
   );
 }
 
-// ─── Arb row ─────────────────────────────────────────────────
+// ── Arb row ───────────────────────────────────────────────────
 
 function ArbRow({
   arb,
   stake,
-  demo,
   expanded,
   onToggle,
 }: {
   arb: Arb;
   stake: number;
-  demo: boolean;
   expanded: boolean;
   onToggle: () => void;
 }) {
@@ -245,71 +265,71 @@ function ArbRow({
 
   return (
     <>
-      <tr style={{ ...d.row, ...(expanded ? d.rowOn : {}) }} onClick={onToggle}>
-        <td style={d.td}>
-          <div style={d.evtName}>{arb.event}</div>
-          <div style={d.evtMeta}>
+      <tr style={{ ...s.row, ...(expanded ? s.rowOn : {}) }} onClick={onToggle}>
+        <td style={s.td}>
+          <div style={s.evtName}>{arb.event}</div>
+          <div style={s.evtMeta}>
             <span>{sportEmoji(arb.sport_key)}</span>
-            <span style={d.evtSport}>
+            <span style={s.evtSport}>
               {arb.sport_key.replace(
                 /^(soccer|basketball|icehockey|americanfootball|baseball|tennis|mma)_/,
                 ""
               )}
             </span>
-            <span style={is3 ? d.chip3 : d.chip}>
+            <span style={is3 ? s.chip3 : s.chip}>
               {marketLabel(arb.market_group)}
             </span>
-            {is3 && <span style={d.chip3way}>3-way</span>}
+            {is3 && <span style={s.chip3way}>3-way</span>}
           </div>
         </td>
-        <td style={d.td}>
-          <div style={d.legBook}>
+        <td style={s.td}>
+          <div style={s.legBook}>
             {arb.leg1_book}{" "}
-            <span style={d.legOdds}>@ {Number(arb.leg1_odds).toFixed(2)}</span>
+            <span style={s.legOdds}>@ {Number(arb.leg1_odds).toFixed(2)}</span>
           </div>
-          <div style={d.legPick}>
+          <div style={s.legPick}>
             {arb.leg1_name}
             {arb.leg1_point ? ` (${arb.leg1_point})` : ""}
           </div>
         </td>
-        <td style={d.td}>
-          <div style={d.legBook}>
+        <td style={s.td}>
+          <div style={s.legBook}>
             {arb.leg2_book}{" "}
-            <span style={d.legOdds}>@ {Number(arb.leg2_odds).toFixed(2)}</span>
+            <span style={s.legOdds}>@ {Number(arb.leg2_odds).toFixed(2)}</span>
           </div>
-          <div style={d.legPick}>
+          <div style={s.legPick}>
             {arb.leg2_name}
             {arb.leg2_point ? ` (${arb.leg2_point})` : ""}
           </div>
           {is3 && arb.leg3_book && (
             <>
-              <div style={{ ...d.legBook, marginTop: 4 }}>
+              <div style={{ ...s.legBook, marginTop: 4 }}>
                 {arb.leg3_book}{" "}
-                <span style={d.legOdds}>
+                <span style={s.legOdds}>
                   @ {Number(arb.leg3_odds).toFixed(2)}
                 </span>
               </div>
-              <div style={d.legPick}>{arb.leg3_name}</div>
+              <div style={s.legPick}>{arb.leg3_name}</div>
             </>
           )}
         </td>
-        <td style={d.tdR}>
-          <span style={{ ...d.mBadge, color: mColor }}>{pct(arb.margin)}</span>
+        <td style={s.tdR}>
+          <span style={{ ...s.mBadge, color: mColor }}>{pct(arb.margin)}</span>
         </td>
-        <td style={d.tdR}>
-          <span style={d.pBadge}>+{fmt(profit)}</span>
+        <td style={s.tdR}>
+          <span style={s.pBadge}>+{fmt(profit)}</span>
         </td>
-        <td style={d.tdR}>
-          <span style={d.tBadge}>{timeUntil(arb.commence_time)}</span>
+        <td style={s.tdR}>
+          <span style={s.tBadge}>{timeUntil(arb.commence_time)}</span>
         </td>
-        <td style={d.tdR}>
-          <span style={{ ...d.chev, ...(expanded ? d.chevOn : {}) }}>▾</span>
+        <td style={s.tdR}>
+          <span style={{ ...s.chev, ...(expanded ? s.chevOn : {}) }}>▾</span>
         </td>
       </tr>
       {expanded && (
-        <tr style={d.expRow}>
-          <td colSpan={7} style={d.expCell}>
-            <ExpandedRow arb={arb} stake={stake} demo={demo} />
+        <tr style={s.expRow}>
+          <td colSpan={7} style={s.expCell}>
+            <ExpandedRow arb={arb} stake={stake} />
           </td>
         </tr>
       )}
@@ -317,7 +337,7 @@ function ArbRow({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const [arbs2, setArbs2] = useState<Arb[]>([]);
@@ -331,8 +351,6 @@ export default function DashboardPage() {
   const [plan, setPlan] = useState<string | null>(null);
   const [trial, setTrial] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
-
-  // Filters
   const [stakeInput, setStakeInput] = useState("50");
   const [tab, setTab] = useState<"2way" | "3way">("2way");
   const [marketCat, setMarketCat] = useState("all");
@@ -373,24 +391,23 @@ export default function DashboardPage() {
   const isElite = plan === "elite" && active;
   const activeArbs = tab === "2way" ? arbs2 : arbs3;
 
-  // Available sports
   const sports = useMemo(() => {
     const set = new Set(activeArbs.map((a) => a.sport_key));
     return ["all", ...Array.from(set)];
   }, [activeArbs]);
 
-  // Filtered arbs
-  const filtered = useMemo(() => {
-    return activeArbs.filter((a) => {
-      if (Number(a.margin) * 100 < minMarginPct) return false;
-      if (sportFilter !== "all" && a.sport_key !== sportFilter) return false;
-      if (marketCat !== "all" && marketCategory(a.market_group) !== marketCat)
-        return false;
-      return true;
-    });
-  }, [activeArbs, minMarginPct, sportFilter, marketCat]);
+  const filtered = useMemo(
+    () =>
+      activeArbs.filter((a) => {
+        if (Number(a.margin) * 100 < minMarginPct) return false;
+        if (sportFilter !== "all" && a.sport_key !== sportFilter) return false;
+        if (marketCat !== "all" && marketCategory(a.market_group) !== marketCat)
+          return false;
+        return true;
+      }),
+    [activeArbs, minMarginPct, sportFilter, marketCat]
+  );
 
-  // Category counts
   const catCounts = useMemo(() => {
     const counts: Record<string, number> = { all: activeArbs.length };
     for (const a of activeArbs) {
@@ -411,7 +428,8 @@ export default function DashboardPage() {
         ? Math.max(...filtered.map((a) => (Number(a.est_profit) || 0) * scale))
         : 0,
       avgMargin: filtered.length
-        ? filtered.reduce((s, a) => s + Number(a.margin), 0) / filtered.length
+        ? filtered.reduce((acc, a) => acc + Number(a.margin), 0) /
+          filtered.length
         : 0,
     };
   }, [filtered, stake]);
@@ -422,47 +440,54 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={d.shell}>
-      {/* ── Sidebar ─────────────────────────────── */}
-      <aside style={{ ...d.sidebar, ...(sidebarOpen ? {} : d.sidebarClosed) }}>
-        <div style={d.sidebarHead}>
-          <div style={d.sidebarTitle}>Filters</div>
+    <div style={s.shell}>
+      {/* ── Sidebar ─────────────────────────── */}
+      <aside style={{ ...s.sidebar, ...(!sidebarOpen ? s.sidebarClosed : {}) }}>
+        {!sidebarOpen ? (
+          // Collapsed state — just show reopen button
           <button
-            style={d.collapseBtn}
-            onClick={() => setSidebarOpen((p) => !p)}
+            style={s.reopenBtn}
+            onClick={() => setSidebarOpen(true)}
+            title="Open filters"
           >
-            {sidebarOpen ? "◀" : "▶"}
+            ▶
           </button>
-        </div>
-
-        {sidebarOpen && (
+        ) : (
           <>
-            {/* Stake */}
-            <div style={d.filterGroup}>
-              <div style={d.filterLabel}>Total stake</div>
-              <div style={d.stakeBox}>
-                <span style={d.stakePre}>£</span>
+            <div style={s.sidebarHead}>
+              <div style={s.sidebarTitle}>Filters</div>
+              <button
+                style={s.collapseBtn}
+                onClick={() => setSidebarOpen(false)}
+              >
+                ◀
+              </button>
+            </div>
+
+            <div style={s.filterGroup}>
+              <div style={s.filterLabel}>Total stake</div>
+              <div style={s.stakeBox}>
+                <span style={s.stakePre}>£</span>
                 <input
                   type="number"
                   min="1"
                   step="1"
                   value={stakeInput}
                   onChange={(e) => setStakeInput(e.target.value)}
-                  style={d.stakeIn}
+                  style={s.stakeIn}
                 />
               </div>
             </div>
 
-            {/* Min margin */}
-            <div style={d.filterGroup}>
-              <div style={d.filterLabel}>Min margin</div>
-              <div style={d.marginBtns}>
+            <div style={s.filterGroup}>
+              <div style={s.filterLabel}>Min margin</div>
+              <div style={s.marginBtns}>
                 {[0, 0.5, 1, 2, 3].map((v) => (
                   <button
                     key={v}
                     style={{
-                      ...d.marginBtn,
-                      ...(minMarginPct === v ? d.marginBtnOn : {}),
+                      ...s.marginBtn,
+                      ...(minMarginPct === v ? s.marginBtnOn : {}),
                     }}
                     onClick={() => setMinMarginPct(v)}
                   >
@@ -472,40 +497,36 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Market category */}
-            <div style={d.filterGroup}>
-              <div style={d.filterLabel}>Market</div>
+            <div style={s.filterGroup}>
+              <div style={s.filterLabel}>Market</div>
               {MARKET_CATEGORIES.map((cat) => (
                 <button
                   key={cat.key}
                   style={{
-                    ...d.catBtn,
-                    ...(marketCat === cat.key ? d.catBtnOn : {}),
+                    ...s.catBtn,
+                    ...(marketCat === cat.key ? s.catBtnOn : {}),
                   }}
                   onClick={() => setMarketCat(cat.key)}
                 >
                   <span>{cat.label}</span>
-                  {catCounts[cat.key] != null && (
-                    <span style={d.catCount}>{catCounts[cat.key] ?? 0}</span>
-                  )}
+                  <span style={s.catCount}>{catCounts[cat.key] ?? 0}</span>
                 </button>
               ))}
             </div>
 
-            {/* Sport filter */}
             {sports.length > 2 && (
-              <div style={d.filterGroup}>
-                <div style={d.filterLabel}>Sport</div>
+              <div style={s.filterGroup}>
+                <div style={s.filterLabel}>Sport</div>
                 <select
-                  style={d.sportSel}
+                  style={s.sportSel}
                   value={sportFilter}
                   onChange={(e) => setSportFilter(e.target.value)}
                 >
-                  {sports.map((s) => (
-                    <option key={s} value={s}>
-                      {s === "all"
+                  {sports.map((sp) => (
+                    <option key={sp} value={sp}>
+                      {sp === "all"
                         ? "All sports"
-                        : `${sportEmoji(s)} ${s.replace(
+                        : `${sportEmoji(sp)} ${sp.replace(
                             /^(soccer|basketball|icehockey|americanfootball|baseball|tennis|mma)_/,
                             ""
                           )}`}
@@ -515,10 +536,9 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Plan badge */}
-            <div style={d.planBadge}>
-              <div style={d.planBadgeL}>Plan</div>
-              <div style={d.planBadgeV}>
+            <div style={s.planBadge}>
+              <div style={s.planBadgeL}>Plan</div>
+              <div style={s.planBadgeV}>
                 {plan
                   ? plan[0].toUpperCase() + plan.slice(1)
                   : signedIn
@@ -530,121 +550,114 @@ export default function DashboardPage() {
         )}
       </aside>
 
-      {/* ── Main ────────────────────────────────── */}
-      <main style={d.main}>
-        {/* Trial banner */}
+      {/* ── Main ────────────────────────────── */}
+      <main style={s.main}>
         {trial && !loading && (
-          <div style={d.trialBanner}>
-            <div style={d.trialLeft}>
-              <span style={d.trialBadge}>FREE TRIAL</span>
-              <span style={d.trialMsg}>
+          <div style={s.trialBanner}>
+            <div style={s.trialLeft}>
+              <span style={s.trialBadge}>FREE TRIAL</span>
+              <span style={s.trialMsg}>
                 {trialDaysLeft > 0
                   ? `${trialDaysLeft} day${trialDaysLeft !== 1 ? "s" : ""} left`
                   : "Trial ends today"}{" "}
                 · card charged automatically
               </span>
             </div>
-            <Link href="/pricing" style={d.trialBtn}>
+            <Link href="/pricing" style={s.trialBtn}>
               Manage
             </Link>
           </div>
         )}
 
-        {/* Header */}
-        <div style={d.hdr}>
+        <div style={s.hdr}>
           <div>
-            <h1 style={d.hdrTitle}>Arbitrage feed</h1>
-            <p style={d.hdrSub}>
+            <h1 style={s.hdrTitle}>Arbitrage feed</h1>
+            <p style={s.hdrSub}>
               {demo ? "Demo mode" : "Live · auto-refreshes every 30s"}
             </p>
           </div>
-          <div style={d.hdrRight}>
-            {/* Tabs */}
-            <div style={d.tabs}>
+          <div style={s.hdrRight}>
+            <div style={s.tabs}>
               <button
-                style={{ ...d.tab, ...(tab === "2way" ? d.tabOn : {}) }}
+                style={{ ...s.tab, ...(tab === "2way" ? s.tabOn : {}) }}
                 onClick={() => {
                   setTab("2way");
                   setExpandedId(null);
                 }}
               >
-                2-Way
-                <span style={d.tabCount}>{arbs2.length}</span>
+                2-Way <span style={s.tabCount}>{arbs2.length}</span>
               </button>
               <button
                 style={{
-                  ...d.tab,
-                  ...(tab === "3way" ? d.tabOn : {}),
-                  ...(!isElite ? d.tabLocked : {}),
+                  ...s.tab,
+                  ...(tab === "3way" ? s.tabOn : {}),
+                  ...(!isElite ? s.tabLocked : {}),
                 }}
                 onClick={() => isElite && (setTab("3way"), setExpandedId(null))}
                 title={!isElite ? "Elite plan required" : undefined}
               >
-                3-Way
-                <span style={d.tabCount}>{isElite ? arbs3.length : "🔒"}</span>
+                3-Way{" "}
+                <span style={s.tabCount}>{isElite ? arbs3.length : "🔒"}</span>
               </button>
             </div>
-            {/* Live pulse */}
-            <div style={d.pulse}>
-              <div style={d.pulseDot} />
+            <div style={s.pulse}>
+              <div style={s.pulseDot} />
               {updatedAt ? updatedAt.toLocaleTimeString("en-GB") : "—"}
             </div>
           </div>
         </div>
 
-        {/* Lock banners */}
         {!signedIn && !loading && (
-          <div style={d.lock}>
+          <div style={s.lock}>
             <div>
-              <div style={d.lockT}>Sign in to access live arbs</div>
-              <div style={d.lockS}>
+              <div style={s.lockT}>Sign in to access live arbs</div>
+              <div style={s.lockS}>
                 Guest mode — sign in and subscribe to unlock.
               </div>
             </div>
-            <div style={d.lockBtns}>
-              <Link href="/login" style={d.btnP}>
+            <div style={s.lockBtns}>
+              <Link href="/login" style={s.btnP}>
                 Log in
               </Link>
-              <Link href="/pricing" style={d.btnG}>
+              <Link href="/pricing" style={s.btnG}>
                 View plans
               </Link>
             </div>
           </div>
         )}
         {signedIn && !active && !loading && (
-          <div style={d.lock}>
+          <div style={s.lock}>
             <div>
-              <div style={d.lockT}>No active subscription</div>
-              <div style={d.lockS}>
+              <div style={s.lockT}>No active subscription</div>
+              <div style={s.lockS}>
                 Start a 7-day free trial. Card required, cancels automatically.
               </div>
             </div>
-            <div style={d.lockBtns}>
-              <Link href="/pricing" style={d.btnP}>
+            <div style={s.lockBtns}>
+              <Link href="/pricing" style={s.btnP}>
                 Try free — 7 days
               </Link>
             </div>
           </div>
         )}
         {tab === "3way" && !isElite && (
-          <div style={d.upsell}>
+          <div style={s.upsell}>
             <div>
-              <div style={d.lockT}>3-Way arbs are Elite only</div>
-              <div style={d.lockS}>
+              <div style={s.lockT}>3-Way arbs are Elite only</div>
+              <div style={s.lockS}>
                 Football 1X2 across home/draw/away — harder to spot, higher
                 margins.
               </div>
             </div>
-            <Link href="/pricing" style={d.btnP}>
+            <Link href="/pricing" style={s.btnP}>
               Upgrade to Elite
             </Link>
           </div>
         )}
 
-        {/* Stats bar */}
-        <div style={d.statsBar}>
+        <div style={s.statsBar}>
           {[
-            { l: "Showing", v: `${filtered.length} arbs` },
+            { l: "Showing", v: `${stats.count} arbs` },
             { l: "Best margin", v: pct(stats.bestMargin) },
             { l: "Avg margin", v: pct(stats.avgMargin) },
             {
@@ -652,42 +665,41 @@ export default function DashboardPage() {
               v: active ? `+${fmt(stats.bestProfit)}` : "—",
             },
           ].map(({ l, v }) => (
-            <div key={l} style={d.stat}>
-              <div style={d.statL}>{l}</div>
-              <div style={d.statV}>{v}</div>
+            <div key={l} style={s.stat}>
+              <div style={s.statL}>{l}</div>
+              <div style={s.statV}>{v}</div>
             </div>
           ))}
         </div>
 
-        {loading && <div style={d.info}>Loading arbs…</div>}
+        {loading && <div style={s.info}>Loading arbs…</div>}
         {!loading && error && (
-          <div style={{ ...d.info, ...d.infoErr }}>{error}</div>
+          <div style={{ ...s.info, ...s.infoErr }}>{error}</div>
         )}
 
-        {/* Table */}
         {!loading &&
           !error &&
           (tab === "2way" || isElite) &&
           (filtered.length === 0 ? (
-            <div style={d.info}>
+            <div style={s.info}>
               {demo
                 ? "Subscribe to see live arbs."
                 : "No arbs match current filters."}
             </div>
           ) : (
-            <div style={d.tableWrap}>
-              <table style={d.table}>
+            <div style={s.tableWrap}>
+              <table style={s.table}>
                 <thead>
                   <tr>
-                    <th style={d.th}>Event</th>
-                    <th style={d.th}>Leg 1</th>
-                    <th style={d.th}>
+                    <th style={s.th}>Event</th>
+                    <th style={s.th}>Leg 1</th>
+                    <th style={s.th}>
                       {tab === "3way" ? "Leg 2 · 3" : "Leg 2"}
                     </th>
-                    <th style={{ ...d.th, textAlign: "right" }}>Margin</th>
-                    <th style={{ ...d.th, textAlign: "right" }}>Profit</th>
-                    <th style={{ ...d.th, textAlign: "right" }}>Starts</th>
-                    <th style={{ ...d.th, textAlign: "right" }}></th>
+                    <th style={{ ...s.th, textAlign: "right" }}>Margin</th>
+                    <th style={{ ...s.th, textAlign: "right" }}>Profit</th>
+                    <th style={{ ...s.th, textAlign: "right" }}>Starts</th>
+                    <th style={{ ...s.th, textAlign: "right" }}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -696,7 +708,6 @@ export default function DashboardPage() {
                       key={a.id ?? i}
                       arb={a}
                       stake={stake}
-                      demo={demo}
                       expanded={expandedId === (a.id ?? i)}
                       onToggle={() => toggle(a.id, i)}
                     />
@@ -710,10 +721,10 @@ export default function DashboardPage() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────
+// ── Styles ────────────────────────────────────────────────────
 
-const d: Record<string, React.CSSProperties> = {
-  shell: { display: "flex", minHeight: "100vh", gap: 0 },
+const s: Record<string, React.CSSProperties> = {
+  shell: { display: "flex", minHeight: "100vh" },
 
   // Sidebar
   sidebar: {
@@ -724,19 +735,19 @@ const d: Record<string, React.CSSProperties> = {
     padding: "24px 0",
     display: "flex",
     flexDirection: "column",
-    gap: 0,
     position: "sticky" as const,
     top: 0,
     height: "100vh",
     overflowY: "auto",
   },
-  sidebarClosed: { width: 44, padding: "24px 0" },
+  sidebarClosed: { width: 44, alignItems: "center", padding: "16px 0" },
   sidebarHead: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     padding: "0 16px 16px",
     borderBottom: "1px solid rgba(255,255,255,0.06)",
+    marginBottom: 4,
   },
   sidebarTitle: {
     fontSize: 11,
@@ -747,14 +758,25 @@ const d: Record<string, React.CSSProperties> = {
   },
   collapseBtn: {
     background: "none",
-    border: "none",
-    color: "rgba(255,255,255,0.3)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 8,
+    color: "rgba(255,255,255,0.4)",
     cursor: "pointer",
-    fontSize: 12,
-    padding: 4,
+    fontSize: 11,
+    padding: "4px 7px",
+  },
+  reopenBtn: {
+    background: "none",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 8,
+    color: "rgba(255,255,255,0.4)",
+    cursor: "pointer",
+    fontSize: 11,
+    padding: "6px 10px",
+    margin: "0 auto",
   },
 
-  filterGroup: { padding: "16px 16px 0" },
+  filterGroup: { padding: "14px 16px 0" },
   filterLabel: {
     fontSize: 10,
     fontWeight: 700,
@@ -910,7 +932,6 @@ const d: Record<string, React.CSSProperties> = {
   hdrSub: { margin: "4px 0 0", fontSize: 13, color: "rgba(255,255,255,0.45)" },
   hdrRight: { display: "flex", gap: 10, alignItems: "center" },
 
-  // Tabs
   tabs: {
     display: "flex",
     gap: 4,
@@ -957,7 +978,6 @@ const d: Record<string, React.CSSProperties> = {
     boxShadow: "0 0 6px #22c55e",
   },
 
-  // Lock / upsell
   lock: {
     border: "1px solid rgba(255,255,255,0.07)",
     background: "rgba(10,14,20,0.5)",
@@ -986,7 +1006,6 @@ const d: Record<string, React.CSSProperties> = {
   lockS: { color: "rgba(255,255,255,0.5)", fontSize: 13 },
   lockBtns: { display: "flex", gap: 8 },
 
-  // Stats bar
   statsBar: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0,1fr))",
@@ -1093,45 +1112,116 @@ const d: Record<string, React.CSSProperties> = {
   },
   chevOn: { transform: "rotate(180deg)", color: "rgba(255,255,255,0.6)" },
 
-  // Expanded
   expRow: { background: "rgba(120,110,255,0.03)" },
   expCell: { padding: "0 14px 14px" },
+
+  // Placement card
   expBox: {
     border: "1px solid rgba(120,110,255,0.14)",
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 14,
+    padding: 18,
     background: "rgba(8,11,18,0.6)",
   },
-  expLegs: {
+  expStrip: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4,1fr)",
+    gap: 10,
+    marginBottom: 18,
+  },
+  expStripItem: {
+    background: "rgba(255,255,255,0.03)",
+    borderRadius: 10,
+    padding: "10px 12px",
+    border: "1px solid rgba(255,255,255,0.06)",
+  },
+  expStripL: { fontSize: 11, color: "rgba(255,255,255,0.38)", marginBottom: 4 },
+  expStripV: { fontSize: 15, fontWeight: 800, color: "white" },
+  expStepsLabel: {
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: "0.1em",
+    color: "rgba(255,255,255,0.3)",
+    textTransform: "uppercase" as const,
+    marginBottom: 10,
+  },
+  expSteps: { display: "flex", flexDirection: "column" as const, gap: 8 },
+  expStep: {
     display: "flex",
-    gap: 16,
-    alignItems: "flex-start",
-    flexWrap: "wrap" as const,
+    gap: 14,
+    padding: "14px 16px",
+    borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "rgba(255,255,255,0.02)",
+    cursor: "pointer",
   },
-  expLeg: { flex: 1, minWidth: 120 },
-  expBook: { fontSize: 14, fontWeight: 800, color: "white", marginBottom: 3 },
-  expPick: { fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 10 },
-  expLine: {
+  expStepDone: {
+    border: "1px solid rgba(0,255,140,0.2)",
+    background: "rgba(0,255,140,0.04)",
+    opacity: 0.65,
+  },
+  expNum: {
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    background: "rgba(120,110,255,0.2)",
+    border: "1px solid rgba(120,110,255,0.4)",
+    color: "white",
+    fontSize: 13,
+    fontWeight: 800,
     display: "flex",
-    justifyContent: "space-between",
-    marginBottom: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    marginTop: 2,
   },
-  expL: { fontSize: 12, color: "rgba(255,255,255,0.35)" },
-  expV: { fontSize: 13, fontWeight: 800, color: "white" },
-  expOdds: { fontSize: 13, fontWeight: 700, color: "#98b8ff" },
-  expVr: {
-    width: 1,
-    background: "rgba(255,255,255,0.05)",
-    alignSelf: "stretch",
+  expNumDone: {
+    background: "rgba(0,255,140,0.15)",
+    border: "1px solid rgba(0,255,140,0.3)",
+    color: "#9be7bf",
   },
-  expSummary: { flex: 1, minWidth: 120 },
-  expTip: {
-    marginTop: 12,
+  expBody: { flex: 1 },
+  expWait: {
+    fontSize: 11,
+    color: "rgba(245,158,11,0.85)",
+    marginBottom: 6,
+    fontWeight: 600,
+  },
+  expAction: { fontSize: 13, color: "rgba(255,255,255,0.6)", marginBottom: 4 },
+  expBookName: { color: "white", fontWeight: 700 },
+  expSelection: {
+    fontSize: 15,
+    fontWeight: 800,
+    color: "white",
+    marginBottom: 8,
+  },
+  expChips: { display: "flex", gap: 8 },
+  expOddsChip: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.42)",
-    borderTop: "1px solid rgba(255,255,255,0.05)",
-    paddingTop: 10,
-    lineHeight: 1.6,
+    fontWeight: 700,
+    padding: "4px 10px",
+    borderRadius: 999,
+    background: "rgba(120,110,255,0.15)",
+    border: "1px solid rgba(120,110,255,0.25)",
+    color: "#98b8ff",
+  },
+  expStakeChip: {
+    fontSize: 12,
+    fontWeight: 700,
+    padding: "4px 10px",
+    borderRadius: 999,
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    color: "white",
+  },
+  expDone: {
+    marginTop: 14,
+    padding: "12px 16px",
+    borderRadius: 12,
+    background: "rgba(0,255,140,0.07)",
+    border: "1px solid rgba(0,255,140,0.18)",
+    fontSize: 14,
+    color: "#9be7bf",
+    fontWeight: 600,
   },
 
   btnP: {
