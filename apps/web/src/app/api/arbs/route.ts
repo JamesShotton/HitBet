@@ -1,7 +1,7 @@
 import { pool } from "../../lib/db";
 import { auth } from "../../lib/auth";
 
-function demoArbs() {
+function demoArbs2Way() {
   return [
     {
       id: "demo-1",
@@ -9,6 +9,7 @@ function demoArbs() {
       sport_key: "soccer_epl",
       market_group: "h2h",
       commence_time: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
+      legs: 2,
       margin: 0.021,
       est_profit: 1.12,
       total_stake: 50,
@@ -20,6 +21,34 @@ function demoArbs() {
       leg2_book: "Unibet",
       leg2_odds: 2.1,
       leg2_stake: 25.37,
+    },
+  ];
+}
+
+function demoArbs3Way() {
+  return [
+    {
+      id: "demo-3w-1",
+      event: "Man City vs Liverpool",
+      sport_key: "soccer_epl",
+      market_group: "h2h_3way",
+      commence_time: new Date(Date.now() + 90 * 60 * 1000).toISOString(),
+      legs: 3,
+      margin: 0.018,
+      est_profit: 0.92,
+      total_stake: 50,
+      leg1_name: "Man City win",
+      leg1_book: "Bet365",
+      leg1_odds: 2.2,
+      leg1_stake: 18.94,
+      leg2_name: "Draw",
+      leg2_book: "William Hill",
+      leg2_odds: 3.6,
+      leg2_stake: 11.57,
+      leg3_name: "Liverpool win",
+      leg3_book: "Unibet",
+      leg3_odds: 3.1,
+      leg3_stake: 19.49,
     },
   ];
 }
@@ -36,18 +65,15 @@ export async function GET() {
         plan: null,
         trial: false,
         trialDaysLeft: 0,
-        arbs: demoArbs(),
+        arbs2way: demoArbs2Way(),
+        arbs3way: [],
       });
     }
 
     const sub = await pool.query(
-      `
-      select status, plan, trial_expires_at
-      from subscriptions
-      where user_email = $1
-      order by updated_at desc
-      limit 1
-      `,
+      `select status, plan, trial_expires_at
+       from subscriptions where user_email = $1
+       order by updated_at desc limit 1`,
       [session.user.email]
     );
 
@@ -56,15 +82,13 @@ export async function GET() {
     const plan = row?.plan ?? null;
     const trialExpiresAt = row?.trial_expires_at ?? null;
 
-    // User is active if: status is active, trialing, OR trial hasn't expired yet
     const isActive = status === "active";
     const isTrialing =
       status === "trialing" ||
       (trialExpiresAt && new Date(trialExpiresAt) > new Date());
-
     const hasAccess = isActive || isTrialing;
+    const isElite = plan === "elite" && hasAccess;
 
-    // Calculate days left in trial
     let trialDaysLeft = 0;
     if (isTrialing && trialExpiresAt) {
       const msLeft = new Date(trialExpiresAt).getTime() - Date.now();
@@ -79,16 +103,22 @@ export async function GET() {
         plan,
         trial: false,
         trialDaysLeft: 0,
-        arbs: demoArbs(),
+        arbs2way: demoArbs2Way(),
+        arbs3way: [],
       });
     }
 
-    const result = await pool.query(`
-      select *
-      from arbs
-      order by margin desc
-      limit 50
-    `);
+    const result2 = await pool.query(
+      `select * from arbs where legs = 2 order by margin desc limit 50`
+    );
+
+    let arbs3way: any[] = [];
+    if (isElite) {
+      const result3 = await pool.query(
+        `select * from arbs where legs = 3 order by margin desc limit 50`
+      );
+      arbs3way = result3.rows;
+    }
 
     return Response.json({
       signedIn: true,
@@ -97,7 +127,8 @@ export async function GET() {
       plan,
       trial: isTrialing && !isActive,
       trialDaysLeft,
-      arbs: result.rows,
+      arbs2way: result2.rows,
+      arbs3way,
     });
   } catch (err) {
     console.error("API /api/arbs failed:", err);
@@ -109,7 +140,8 @@ export async function GET() {
         plan: null,
         trial: false,
         trialDaysLeft: 0,
-        arbs: [],
+        arbs2way: [],
+        arbs3way: [],
         error: "Failed to load arbs",
       },
       { status: 500 }
