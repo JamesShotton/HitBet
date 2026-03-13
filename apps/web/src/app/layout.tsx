@@ -16,7 +16,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="bgNoise" aria-hidden />
           <div className="scanlines" aria-hidden />
 
-          <div className="container">
+          {/* Nav shell — full viewport width, nav bar inside is max-width contained */}
+          <div className="navShell">
             <header className="header">
               <div className="nav">
                 <Link href="/" className="brandWrap">
@@ -26,7 +27,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     <div className="tag">Cyber-clarity • Execution-ready</div>
                   </div>
                 </Link>
-
                 <nav className="navlinks">
                   <Link className="navLink" href="/">
                     Home
@@ -44,20 +44,24 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 </nav>
               </div>
             </header>
+          </div>
 
-            <main className="main">{children}</main>
-
-            <footer className="footer">
-              <div className="footerInner">
-                <div className="small">
-                  Informational tool only. Always verify markets, odds, rules,
-                  and settlement conditions before placing bets.
+          {/* Page shell — full width. Each page wraps itself if it wants to be narrow. */}
+          <div className="pageShell">
+            <main className="pageMain">{children}</main>
+            <div className="footerShell">
+              <footer className="footer">
+                <div className="footerInner">
+                  <div className="small">
+                    Informational tool only. Always verify markets, odds, rules,
+                    and settlement conditions before placing bets.
+                  </div>
+                  <div className="small muted">
+                    © {new Date().getFullYear()} HitBet
+                  </div>
                 </div>
-                <div className="small muted">
-                  © {new Date().getFullYear()} HitBet
-                </div>
-              </div>
-            </footer>
+              </footer>
+            </div>
           </div>
         </Providers>
       </body>

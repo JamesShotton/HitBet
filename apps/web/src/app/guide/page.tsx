@@ -149,135 +149,139 @@ const RISK_LEVELS = [
 
 export default function GuidePage() {
   return (
-    <main style={g.page}>
-      <div style={g.wrap}>
-        {/* ── Hero ─────────────────────────────── */}
-        <div style={g.hero}>
-          <div style={g.heroKicker}>STEALTH GUIDE</div>
-          <h1 style={g.h1}>How not to get banned</h1>
-          <p style={g.heroSub}>
-            Arbitrage is not illegal. But books don't like consistent winners —
-            they will limit or ban accounts that show clear arbing patterns.
-            This guide shows you how to operate quietly and extend the life of
-            your accounts.
-          </p>
-          <div style={g.disclaimer}>
-            <span style={g.disclaimerIcon}>ℹ️</span>
-            <span>
-              This is general information based on common experience in the
-              arbing community. It is not financial or legal advice. Always
-              follow each bookmaker's terms of service.
-            </span>
+    <div className="narrowPage">
+      <main style={g.page}>
+        <div style={g.wrap}>
+          {/* ── Hero ─────────────────────────────── */}
+          <div style={g.hero}>
+            <div style={g.heroKicker}>STEALTH GUIDE</div>
+            <h1 style={g.h1}>How not to get banned</h1>
+            <p style={g.heroSub}>
+              Arbitrage is not illegal. But books don't like consistent winners
+              — they will limit or ban accounts that show clear arbing patterns.
+              This guide shows you how to operate quietly and extend the life of
+              your accounts.
+            </p>
+            <div style={g.disclaimer}>
+              <span style={g.disclaimerIcon}>ℹ️</span>
+              <span>
+                This is general information based on common experience in the
+                arbing community. It is not financial or legal advice. Always
+                follow each bookmaker's terms of service.
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* ── Risk radar ───────────────────────── */}
-        <div style={g.radarCard}>
-          <div style={g.radarTitle}>What books look for</div>
-          <div style={g.radarGrid}>
-            {RISK_LEVELS.map((r) => (
-              <div key={r.label} style={g.radarItem}>
-                <div style={g.radarBar}>
-                  <div
-                    style={{
-                      ...g.radarFill,
-                      background: r.color,
-                      opacity: 0.85,
-                    }}
-                  />
+          {/* ── Risk radar ───────────────────────── */}
+          <div style={g.radarCard}>
+            <div style={g.radarTitle}>What books look for</div>
+            <div style={g.radarGrid}>
+              {RISK_LEVELS.map((r) => (
+                <div key={r.label} style={g.radarItem}>
+                  <div style={g.radarBar}>
+                    <div
+                      style={{
+                        ...g.radarFill,
+                        background: r.color,
+                        opacity: 0.85,
+                      }}
+                    />
+                  </div>
+                  <div style={g.radarLabel}>{r.label}</div>
+                  <div style={{ ...g.radarRisk, color: r.color }}>
+                    {r.risk} risk
+                  </div>
                 </div>
-                <div style={g.radarLabel}>{r.label}</div>
-                <div style={{ ...g.radarRisk, color: r.color }}>
-                  {r.risk} risk
+              ))}
+            </div>
+          </div>
+
+          {/* ── Sections ─────────────────────────── */}
+          {SECTIONS.map((sec, si) => (
+            <div key={sec.id} style={g.section}>
+              <div style={g.secHeader}>
+                <span style={g.secEmoji}>{sec.emoji}</span>
+                <div>
+                  <h2 style={g.secHeading}>{sec.heading}</h2>
+                  <p style={g.secSub}>{sec.sub}</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* ── Sections ─────────────────────────── */}
-        {SECTIONS.map((sec, si) => (
-          <div key={sec.id} style={g.section}>
-            <div style={g.secHeader}>
-              <span style={g.secEmoji}>{sec.emoji}</span>
-              <div>
-                <h2 style={g.secHeading}>{sec.heading}</h2>
-                <p style={g.secSub}>{sec.sub}</p>
+              <div style={g.tipsGrid}>
+                {sec.tips.map((tip, ti) => (
+                  <div key={ti} style={g.tipCard}>
+                    <div style={g.tipNum}>
+                      {String(ti + 1).padStart(2, "0")}
+                    </div>
+                    <div style={g.tipTitle}>{tip.title}</div>
+                    <div style={g.tipBody}>{tip.body}</div>
+                  </div>
+                ))}
               </div>
             </div>
+          ))}
 
-            <div style={g.tipsGrid}>
-              {sec.tips.map((tip, ti) => (
-                <div key={ti} style={g.tipCard}>
-                  <div style={g.tipNum}>{String(ti + 1).padStart(2, "0")}</div>
-                  <div style={g.tipTitle}>{tip.title}</div>
-                  <div style={g.tipBody}>{tip.body}</div>
-                </div>
-              ))}
+          {/* ── Summary table ────────────────────── */}
+          <div style={g.summaryCard}>
+            <div style={g.summaryTitle}>Quick reference</div>
+            <div style={g.summaryGrid}>
+              <div style={g.summaryCol}>
+                <div style={g.summaryColHead}>✅ Do</div>
+                {[
+                  "Round your stakes to natural numbers",
+                  "Wait 20–30s between legs",
+                  "Browse before betting",
+                  "Place recreational bets occasionally",
+                  "Rotate sports and books",
+                  "Use exchanges as anchor legs",
+                  "Leave winnings in your account",
+                ].map((d) => (
+                  <div key={d} style={g.summaryItem}>
+                    {d}
+                  </div>
+                ))}
+              </div>
+              <div style={g.summaryDivider} />
+              <div style={g.summaryCol}>
+                <div style={g.summaryColHead}>❌ Don't</div>
+                {[
+                  "Place exact decimal stakes",
+                  "Place both legs simultaneously",
+                  "Log in and immediately bet",
+                  "Always take the best available odds",
+                  "Hammer the same two books",
+                  "Withdraw immediately after winning",
+                  "Mix bonus abuse with arbing",
+                ].map((d) => (
+                  <div key={d} style={g.summaryItem}>
+                    {d}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        ))}
 
-        {/* ── Summary table ────────────────────── */}
-        <div style={g.summaryCard}>
-          <div style={g.summaryTitle}>Quick reference</div>
-          <div style={g.summaryGrid}>
-            <div style={g.summaryCol}>
-              <div style={g.summaryColHead}>✅ Do</div>
-              {[
-                "Round your stakes to natural numbers",
-                "Wait 20–30s between legs",
-                "Browse before betting",
-                "Place recreational bets occasionally",
-                "Rotate sports and books",
-                "Use exchanges as anchor legs",
-                "Leave winnings in your account",
-              ].map((d) => (
-                <div key={d} style={g.summaryItem}>
-                  {d}
-                </div>
-              ))}
+          {/* ── CTA ──────────────────────────────── */}
+          <div style={g.cta}>
+            <div style={g.ctaText}>
+              <div style={g.ctaTitle}>Ready to start placing?</div>
+              <div style={g.ctaSub}>
+                Head to the dashboard to see live arbs with pre-calculated stake
+                splits.
+              </div>
             </div>
-            <div style={g.summaryDivider} />
-            <div style={g.summaryCol}>
-              <div style={g.summaryColHead}>❌ Don't</div>
-              {[
-                "Place exact decimal stakes",
-                "Place both legs simultaneously",
-                "Log in and immediately bet",
-                "Always take the best available odds",
-                "Hammer the same two books",
-                "Withdraw immediately after winning",
-                "Mix bonus abuse with arbing",
-              ].map((d) => (
-                <div key={d} style={g.summaryItem}>
-                  {d}
-                </div>
-              ))}
+            <div style={g.ctaBtns}>
+              <Link href="/dashboard" style={g.btnP}>
+                Open dashboard
+              </Link>
+              <Link href="/pricing" style={g.btnG}>
+                View plans
+              </Link>
             </div>
           </div>
         </div>
-
-        {/* ── CTA ──────────────────────────────── */}
-        <div style={g.cta}>
-          <div style={g.ctaText}>
-            <div style={g.ctaTitle}>Ready to start placing?</div>
-            <div style={g.ctaSub}>
-              Head to the dashboard to see live arbs with pre-calculated stake
-              splits.
-            </div>
-          </div>
-          <div style={g.ctaBtns}>
-            <Link href="/dashboard" style={g.btnP}>
-              Open dashboard
-            </Link>
-            <Link href="/pricing" style={g.btnG}>
-              View plans
-            </Link>
-          </div>
-        </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
 
