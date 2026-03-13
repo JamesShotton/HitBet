@@ -1133,3 +1133,116 @@ a:hover {
     flex-wrap: wrap;
   }
 }
+
+/* =====================================================
+   MOBILE NAV — append to globals.css
+   ===================================================== */
+
+/* Desktop nav visible, hamburger hidden */
+.navDesktop {
+  display: flex;
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.hamburgerLine {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 999px;
+  transition: all 0.2s;
+}
+
+/* Animated X when open */
+.hamburgerLineTop {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburgerLineMid {
+  opacity: 0;
+}
+.hamburgerLineBot {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Mobile dropdown */
+.mobileMenu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: rgba(10, 12, 20, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 10px 8px;
+  z-index: 50;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.mobileLink {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.mobileLink:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+}
+
+.mobileDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 8px 6px;
+}
+
+.mobileAuth {
+  padding: 6px 6px 4px;
+}
+
+/* nav needs relative positioning for dropdown */
+.nav {
+  position: relative;
+}
+
+@media (max-width: 700px) {
+  /* Hide desktop nav, show hamburger */
+  .navDesktop {
+    display: none !important;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .mobileMenu {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Tighten nav padding on mobile */
+  .nav {
+    padding: 10px 12px;
+    border-radius: 16px;
+  }
+
+  .tag {
+    display: none;
+  }
+}

@@ -714,6 +714,7 @@ export default function DashboardPage() {
   const [expandedId, setExpandedId] = useState<string | number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false); // closed by default on mobile
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [excludedBooks, setExcludedBooks] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     try {
@@ -754,6 +755,25 @@ export default function DashboardPage() {
     [activeArbs]
   );
 
+  const allBooks = useMemo(() => {
+    const set = new Set<string>();
+    for (const a of [...arbs2, ...arbs3]) {
+      if (a.leg1_book) set.add(a.leg1_book);
+      if (a.leg2_book) set.add(a.leg2_book);
+      if (a.leg3_book) set.add(a.leg3_book);
+    }
+    return Array.from(set).sort();
+  }, [arbs2, arbs3]);
+
+  function toggleBook(book: string) {
+    setExcludedBooks((prev) => {
+      const next = new Set(prev);
+      if (next.has(book)) next.delete(book);
+      else next.add(book);
+      return next;
+    });
+  }
+
   const filtered = useMemo(
     () =>
       activeArbs.filter((a) => {
@@ -761,9 +781,15 @@ export default function DashboardPage() {
         if (sportFilter !== "all" && a.sport_key !== sportFilter) return false;
         if (marketCat !== "all" && marketCategory(a.market_group) !== marketCat)
           return false;
+        if (excludedBooks.size > 0) {
+          const books = [a.leg1_book, a.leg2_book, a.leg3_book].filter(
+            Boolean
+          ) as string[];
+          if (books.some((b) => excludedBooks.has(b))) return false;
+        }
         return true;
       }),
-    [activeArbs, minMarginPct, sportFilter, marketCat]
+    [activeArbs, minMarginPct, sportFilter, marketCat, excludedBooks]
   );
 
   const catCounts = useMemo(() => {
@@ -1038,6 +1064,87 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {allBooks.length > 0 && (
+        <div style={{ padding: "14px 16px 0" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 8,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                color: "rgba(255,255,255,0.3)",
+                textTransform: "uppercase" as const,
+              }}
+            >
+              Exclude books
+            </div>
+            {excludedBooks.size > 0 && (
+              <button
+                onClick={() => setExcludedBooks(new Set())}
+                style={{
+                  fontSize: 10,
+                  color: "rgba(255,255,255,0.4)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                }}
+              >
+                Clear ({excludedBooks.size})
+              </button>
+            )}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column" as const,
+              gap: 3,
+              maxHeight: 200,
+              overflowY: "auto" as const,
+            }}
+          >
+            {allBooks.map((book) => (
+              <button
+                key={book}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "100%",
+                  padding: "6px 10px",
+                  borderRadius: 8,
+                  border: excludedBooks.has(book)
+                    ? "1px solid rgba(255,90,90,0.3)"
+                    : "1px solid rgba(255,255,255,0.06)",
+                  background: excludedBooks.has(book)
+                    ? "rgba(255,90,90,0.08)"
+                    : "rgba(255,255,255,0.02)",
+                  color: excludedBooks.has(book)
+                    ? "rgba(255,130,130,0.9)"
+                    : "rgba(255,255,255,0.6)",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  textAlign: "left" as const,
+                }}
+                onClick={() => toggleBook(book)}
+              >
+                <span>{book}</span>
+                <span style={{ fontSize: 11, opacity: 0.6 }}>
+                  {excludedBooks.has(book) ? "✕" : ""}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           margin: "20px 16px 0",
@@ -1271,8 +1378,16 @@ export default function DashboardPage() {
                 ⚙ Filters{" "}
                 {minMarginPct > 0 ||
                 marketCat !== "all" ||
-                sportFilter !== "all"
-                  ? "•"
+                sportFilter !== "all" ||
+                excludedBooks.size > 0
+                  ? `(${
+                      [
+                        minMarginPct > 0,
+                        marketCat !== "all",
+                        sportFilter !== "all",
+                        excludedBooks.size > 0,
+                      ].filter(Boolean).length
+                    })`
                   : ""}
               </button>
             )}

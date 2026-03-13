@@ -1,7 +1,6 @@
 import "./globals.css";
-import Link from "next/link";
 import Providers from "./providers";
-import AuthButton from "./ui/AuthButton";
+import NavBar from "./ui/NavBar";
 import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
 
@@ -16,37 +15,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="bgNoise" aria-hidden />
           <div className="scanlines" aria-hidden />
 
-          {/* Nav shell — full viewport width, nav bar inside is max-width contained */}
           <div className="navShell">
             <header className="header">
-              <div className="nav">
-                <Link href="/" className="brandWrap">
-                  <div className="logoDot" />
-                  <div className="brandText">
-                    <div className="brand">HitBet</div>
-                    <div className="tag">Cyber-clarity • Execution-ready</div>
-                  </div>
-                </Link>
-                <nav className="navlinks">
-                  <Link className="navLink" href="/">
-                    Home
-                  </Link>
-                  <Link className="navLink" href="/dashboard">
-                    Dashboard
-                  </Link>
-                  <Link className="navLink" href="/guide">
-                    Guide
-                  </Link>
-                  <Link className="navLink" href="/pricing">
-                    Plans
-                  </Link>
-                  <AuthButton />
-                </nav>
-              </div>
+              <NavBar />
             </header>
           </div>
 
-          {/* Page shell — full width. Each page wraps itself if it wants to be narrow. */}
           <div className="pageShell">
             <main className="pageMain">{children}</main>
             <div className="footerShell">
