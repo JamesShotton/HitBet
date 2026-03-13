@@ -7,17 +7,9 @@ const POLL_INTERVAL = Number(process.env.POLL_INTERVAL_SECONDS ?? 30);
 const MAX_SPORTS = Number(process.env.MAX_SPORTS_TO_SCAN ?? 40);
 const MAX_ARBS = Number(process.env.MAX_ARBS_TO_SAVE ?? 500);
 
-// Markets to fetch in bulk — featured + alternates + halftime
-// All of these work with the /odds endpoint (not per-event)
-const BULK_MARKETS = [
-  "h2h",
-  "spreads",
-  "totals",
-  "alternate_spreads",
-  "alternate_totals",
-  "h2h_h1",
-  "h2h_h2",
-];
+// Only these three are guaranteed to work on the bulk /odds endpoint
+// alternate_spreads, alternate_totals, h2h_h1 etc cause 422 on most sports
+const BULK_MARKETS = ["h2h", "spreads", "totals"];
 
 // High-liquidity sports scanned first — most books = most arb gaps
 const PRIORITY_SPORTS = [
