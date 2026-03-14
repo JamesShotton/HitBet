@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import AuthButton from "./AuthButton";
 
@@ -11,11 +12,14 @@ export default function NavBar() {
     <div className="nav">
       {/* Brand */}
       <Link href="/" className="brandWrap" onClick={() => setOpen(false)}>
-        <div className="logoDot" />
-        <div className="brandText">
-          <div className="brand">HitBet</div>
-          <div className="tag">Cyber-clarity • Execution-ready</div>
-        </div>
+        <Image
+          src="/logo.png"
+          alt="HitBet"
+          width={110}
+          height={36}
+          style={{ objectFit: "contain" }}
+          priority
+        />
       </Link>
 
       {/* Desktop nav */}
@@ -35,7 +39,7 @@ export default function NavBar() {
         <AuthButton />
       </nav>
 
-      {/* Mobile hamburger button */}
+      {/* Mobile hamburger */}
       <button
         className="hamburger"
         onClick={() => setOpen((p) => !p)}
