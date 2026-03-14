@@ -38,6 +38,7 @@ type Arb = {
   leg3_book?: string | null;
   leg3_odds?: number | null;
   leg3_stake?: number | null;
+  created_at?: string | null;
 };
 
 type ApiResponse = {
@@ -65,6 +66,20 @@ function timeUntil(v: string) {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h`;
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+}
+
+function arbAge(createdAt: string | null | undefined): {
+  label: string;
+  color: string;
+  warn: boolean;
+} {
+  if (!createdAt) return { label: "", color: "transparent", warn: false };
+  const mins = (Date.now() - new Date(createdAt).getTime()) / 60000;
+  if (mins >= 10)
+    return { label: `${Math.floor(mins)}m old`, color: "#f87171", warn: true };
+  if (mins >= 5)
+    return { label: `${Math.floor(mins)}m old`, color: "#f59e0b", warn: true };
+  return { label: "", color: "transparent", warn: false };
 }
 
 function sportEmoji(sport: string) {
@@ -609,12 +624,16 @@ function ArbRow({
   expanded,
   onToggle,
   mob,
+  pinned,
+  onPin,
 }: {
   arb: Arb;
   stake: number;
   expanded: boolean;
   onToggle: () => void;
   mob: boolean;
+  pinned: boolean;
+  onPin: () => void;
 }) {
   const mPct = Number(arb.margin) * 100;
   const scale = stake / (Number(arb.total_stake ?? 50) || 50);
@@ -723,6 +742,42 @@ function ArbRow({
             >
               {timeUntil(arb.commence_time)}
             </div>
+            {arbAge(arb.created_at).warn && (
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  marginTop: 3,
+                  color: arbAge(arb.created_at).color,
+                }}
+              >
+                {arbAge(arb.created_at).label}
+              </div>
+            )}
+          </td>
+          <td
+            style={{
+              padding: "0 4px",
+              verticalAlign: "middle",
+              textAlign: "right",
+            }}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onPin();
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: 16,
+                opacity: pinned ? 1 : 0.25,
+                color: pinned ? "#f59e0b" : "white",
+              }}
+            >
+              📌
+            </button>
           </td>
         </tr>
         {expanded && (
@@ -948,9 +1003,11 @@ export default function DashboardPage() {
   const [minMarginPct, setMinMarginPct] = useState(0);
   const [sportFilter, setSportFilter] = useState("all");
   const [expandedId, setExpandedId] = useState<string | number | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // closed by default on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [booksModalOpen, setBooksModalOpen] = useState(false);
+  const [pinnedIds, setPinnedIds] = useState<Set<string | number>>(new Set());
+  const [isRefreshing, setIsRefreshing] = useState(false);
   // myBooks = set of books the user has accounts with
   // null = not yet configured (show all arbs until they set up)
   const [myBooks, setMyBooks] = useState<Set<string> | null>(null);
@@ -1019,6 +1076,21 @@ export default function DashboardPage() {
     }
   }, []);
 
+  async function manualRefresh() {
+    setIsRefreshing(true);
+    await load();
+    setTimeout(() => setIsRefreshing(false), 500);
+  }
+
+  function togglePin(id: string | number) {
+    setPinnedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
   useEffect(() => {
     // Default sidebar open on desktop
     if (!mob) setSidebarOpen(true);
@@ -1048,24 +1120,26 @@ export default function DashboardPage() {
     return Array.from(base);
   }, [arbs2, arbs3]);
 
-  const filtered = useMemo(
-    () =>
-      activeArbs.filter((a) => {
-        if (Number(a.margin) * 100 < minMarginPct) return false;
-        if (sportFilter !== "all" && a.sport_key !== sportFilter) return false;
-        if (marketCat !== "all" && marketCategory(a.market_group) !== marketCat)
-          return false;
-        // If user has configured their books, only show arbs where ALL legs are in their books
-        if (myBooks !== null && myBooks.size > 0) {
-          const books = [a.leg1_book, a.leg2_book, a.leg3_book].filter(
-            Boolean
-          ) as string[];
-          if (!books.every((b) => myBooks.has(b))) return false;
-        }
-        return true;
-      }),
-    [activeArbs, minMarginPct, sportFilter, marketCat, myBooks]
-  );
+  const filtered = useMemo(() => {
+    const base = activeArbs.filter((a) => {
+      if (Number(a.margin) * 100 < minMarginPct) return false;
+      if (sportFilter !== "all" && a.sport_key !== sportFilter) return false;
+      if (marketCat !== "all" && marketCategory(a.market_group) !== marketCat)
+        return false;
+      // If user has configured their books, only show arbs where ALL legs are in their books
+      if (myBooks !== null && myBooks.size > 0) {
+        const books = [a.leg1_book, a.leg2_book, a.leg3_book].filter(
+          Boolean
+        ) as string[];
+        if (!books.every((b) => myBooks.has(b))) return false;
+      }
+      return true;
+    });
+    // Pinned arbs always stay at top regardless of filters
+    const pinned = activeArbs.filter((a) => pinnedIds.has(a.id ?? ""));
+    const unpinned = base.filter((a) => !pinnedIds.has(a.id ?? ""));
+    return [...pinned, ...unpinned];
+  }, [activeArbs, minMarginPct, sportFilter, marketCat, myBooks, pinnedIds]);
 
   const catCounts = useMemo(() => {
     const counts: Record<string, number> = { all: activeArbs.length };
@@ -1977,26 +2051,58 @@ export default function DashboardPage() {
                 </span>
               </button>
             </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 12,
-                color: "rgba(255,255,255,0.5)",
-                fontWeight: 600,
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                onClick={manualRefresh}
+                title="Refresh now"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "6px 10px",
+                  borderRadius: 9,
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(10,14,20,0.5)",
+                  color: "rgba(255,255,255,0.6)",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  transition: "all 0.2s",
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-block",
+                    animation: isRefreshing
+                      ? "spin 0.6s linear infinite"
+                      : "none",
+                  }}
+                >
+                  ↻
+                </span>
+                {mob ? "" : "Refresh"}
+              </button>
               <div
                 style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 999,
-                  background: "#22c55e",
-                  boxShadow: "0 0 6px #22c55e",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 12,
+                  color: "rgba(255,255,255,0.5)",
+                  fontWeight: 600,
                 }}
-              />
-              {updatedAt ? updatedAt.toLocaleTimeString("en-GB") : "—"}
+              >
+                <div
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: 999,
+                    background: "#22c55e",
+                    boxShadow: "0 0 6px #22c55e",
+                  }}
+                />
+                {updatedAt ? updatedAt.toLocaleTimeString("en-GB") : "—"}
+              </div>
             </div>
           </div>
         </div>
@@ -2403,6 +2509,8 @@ export default function DashboardPage() {
                       expanded={expandedId === (a.id ?? i)}
                       onToggle={() => toggle(a.id, i)}
                       mob={mob}
+                      pinned={pinnedIds.has(a.id ?? i)}
+                      onPin={() => togglePin(a.id ?? i)}
                     />
                   ))}
                 </tbody>

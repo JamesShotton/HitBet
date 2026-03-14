@@ -18,7 +18,7 @@
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID;
-const MIN_MARGIN = Number(process.env.TELEGRAM_MIN_MARGIN ?? 0.02);
+const MIN_MARGIN = Number(process.env.TELEGRAM_MIN_MARGIN ?? 0.05);
 const ENABLED = process.env.TELEGRAM_ENABLED === "true";
 const TOTAL_STAKE = Number(process.env.TOTAL_STAKE ?? 50);
 
@@ -93,41 +93,39 @@ function formatArb(arb: ArbAlert): string {
   const profit = fmt(arb.est_profit);
   const starts = timeUntil(arb.commence_time);
   const is3way = arb.legs === 3;
+  const market = marketLabel(arb.market_group);
+
+  // Clean up selection name — remove redundant point in brackets if already in name
+  function cleanPick(name: string, point: string | null | undefined) {
+    if (!point) return name;
+    if (name.includes(`(${point})`)) return name.replace(` (${point})`, "");
+    return name;
+  }
 
   const lines: string[] = [
     `${emoji} *${arb.event}*`,
-    `📈 *${margin} margin* — ${profit} profit @ ${fmt(TOTAL_STAKE)} stake`,
-    `🏷 ${marketLabel(arb.market_group)}${is3way ? " · 3-way" : ""} · ${starts}`,
     ``,
-    `*Leg 1 — ${arb.leg1_book}*`,
-    `Back: ${arb.leg1_name}${
+    `💰 *${margin} margin · ${profit} profit*`,
+    `📋 ${market}${is3way ? " · 3-way" : ""} · ${starts}`,
+    ``,
+    `1️⃣ *${arb.leg1_book}* — ${cleanPick(arb.leg1_name, arb.leg1_point)}${
       arb.leg1_point ? ` (${arb.leg1_point})` : ""
-    } @ ${Number(arb.leg1_odds).toFixed(2)}`,
-    `Stake: ${fmt(arb.leg1_stake)}`,
-    ``,
-    `*Leg 2 — ${arb.leg2_book}*`,
-    `Back: ${arb.leg2_name}${
+    } @ ${Number(arb.leg1_odds).toFixed(2)} · stake *${fmt(arb.leg1_stake)}*`,
+    `2️⃣ *${arb.leg2_book}* — ${cleanPick(arb.leg2_name, arb.leg2_point)}${
       arb.leg2_point ? ` (${arb.leg2_point})` : ""
-    } @ ${Number(arb.leg2_odds).toFixed(2)}`,
-    `Stake: ${fmt(arb.leg2_stake)}`,
+    } @ ${Number(arb.leg2_odds).toFixed(2)} · stake *${fmt(arb.leg2_stake)}*`,
   ];
 
   if (is3way && arb.leg3_book) {
     lines.push(
-      ``,
-      `*Leg 3 — ${arb.leg3_book}*`,
-      `Back: ${arb.leg3_name} @ ${Number(arb.leg3_odds).toFixed(2)}`,
-      `Stake: ${fmt(arb.leg3_stake ?? 0)}`
+      `3️⃣ *${arb.leg3_book}* — ${arb.leg3_name} @ ${Number(
+        arb.leg3_odds
+      ).toFixed(2)} · stake *${fmt(arb.leg3_stake ?? 0)}*`
     );
   }
 
-  lines.push(
-    ``,
-    `_Place leg 1 first, wait 20-30s, then leg 2${
-      is3way ? ", then leg 3" : ""
-    }_`
-  );
-  lines.push(`[Open dashboard](https://hitbet.to/dashboard)`);
+  lines.push(``, `⏱ _Wait 20–30s between each leg_`);
+  lines.push(`[View on dashboard →](https://hitbet.to/dashboard)`);
 
   return lines.join("\n");
 }
@@ -192,7 +190,7 @@ export async function sendArbAlerts(arbs: ArbAlert[]): Promise<void> {
   if (toAlert.length === 0) return;
 
   // Sort by margin desc, take top 5 per cycle to avoid spam
-  const top = toAlert.sort((a, b) => b.margin - a.margin).slice(0, 5);
+  const top = toAlert.sort((a, b) => b.margin - a.margin).slice(0, 2);
 
   console.log(
     `[telegram] sending ${top.length} new arb alert${

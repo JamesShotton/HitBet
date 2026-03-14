@@ -109,13 +109,13 @@ export async function GET() {
     }
 
     const result2 = await pool.query(
-      `select * from arbs where legs = 2 order by margin desc limit 50`
+      `select *, created_at from arbs where legs = 2 order by margin desc limit 50`
     );
 
     let arbs3way: any[] = [];
     if (isElite) {
       const result3 = await pool.query(
-        `select * from arbs where legs = 3 order by margin desc limit 50`
+        `select *, created_at from arbs where legs = 3 order by margin desc limit 50`
       );
       arbs3way = result3.rows;
     }

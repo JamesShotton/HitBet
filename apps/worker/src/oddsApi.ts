@@ -36,12 +36,13 @@ export async function fetchSports() {
 
 export async function fetchOdds(
   sportKey: string,
-  markets = "h2h,spreads,totals"
+  markets = "h2h,spreads,totals",
+  regionsOverride?: string
 ): Promise<OddsEvent[]> {
   const url =
     `https://api.the-odds-api.com/v4/sports/${sportKey}/odds` +
     `?apiKey=${ODDS_API_KEY}` +
-    `&regions=${REGIONS}` +
+    `&regions=${regionsOverride ?? REGIONS}` +
     `&markets=${markets}` +
     `&oddsFormat=decimal`;
 
