@@ -852,6 +852,247 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ── TELEGRAM ── */}
+        <section style={{ padding: mob ? "40px 0" : "70px 0" }}>
+          <div
+            style={{
+              borderRadius: 24,
+              border: "1px solid rgba(0,136,204,0.25)",
+              background:
+                "linear-gradient(135deg, rgba(0,136,204,0.08), rgba(120,110,255,0.08))",
+              padding: mob ? "28px 24px" : "48px 56px",
+              display: "grid",
+              gridTemplateColumns: mob ? "1fr" : "1fr 1fr",
+              gap: mob ? 28 : 60,
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  letterSpacing: "0.16em",
+                  color: "rgba(0,180,255,0.7)",
+                  marginBottom: 12,
+                }}
+              >
+                ELITE FEATURE
+              </div>
+              <h2
+                style={{
+                  fontSize: mob ? 28 : 38,
+                  fontWeight: 900,
+                  letterSpacing: "-1px",
+                  color: "white",
+                  margin: "0 0 16px",
+                  lineHeight: 1.1,
+                }}
+              >
+                Arbs straight to your phone. Before anyone else.
+              </h2>
+              <p
+                style={{
+                  fontSize: 15,
+                  color: "rgba(255,255,255,0.6)",
+                  lineHeight: 1.75,
+                  margin: "0 0 24px",
+                }}
+              >
+                Elite members get instant Telegram alerts the moment a
+                high-value arb hits the feed. No refreshing. No missing
+                opportunities. Just tap, place, profit.
+              </p>
+              <div style={{ display: "grid", gap: 12 }}>
+                {[
+                  "Instant alert when arbs above 2% appear",
+                  "Exact stakes and books included in the message",
+                  "Read-only channel — no noise, just signals",
+                  "Works on any phone, no app needed",
+                ].map((f) => (
+                  <div
+                    key={f}
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      fontSize: 14,
+                      color: "rgba(255,255,255,0.8)",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "#9be7bf",
+                        fontWeight: 900,
+                        flexShrink: 0,
+                      }}
+                    >
+                      ✓
+                    </span>
+                    {f}
+                  </div>
+                ))}
+              </div>
+              <div
+                style={{
+                  marginTop: 28,
+                  display: "flex",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <a
+                  href="/pricing"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "13px 22px",
+                    borderRadius: 14,
+                    fontWeight: 800,
+                    fontSize: 15,
+                    color: "white",
+                    background: GRAD,
+                    border: "1px solid rgba(120,110,255,0.4)",
+                    textDecoration: "none",
+                  }}
+                >
+                  Get Elite access
+                </a>
+              </div>
+            </div>
+            {/* Mock Telegram notification */}
+            <div
+              style={{
+                background: "rgba(10,14,20,0.8)",
+                border: "1px solid rgba(0,136,204,0.2)",
+                borderRadius: 20,
+                padding: 20,
+                backdropFilter: "blur(16px)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 16,
+                  paddingBottom: 14,
+                  borderBottom: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 999,
+                    background:
+                      "linear-gradient(135deg, rgba(0,136,204,0.8), rgba(120,110,255,0.8))",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                  }}
+                >
+                  🎯
+                </div>
+                <div>
+                  <div
+                    style={{ fontSize: 14, fontWeight: 700, color: "white" }}
+                  >
+                    HitBet Alerts
+                  </div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
+                    just now
+                  </div>
+                </div>
+                <div
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: 11,
+                    padding: "3px 8px",
+                    borderRadius: 999,
+                    background: "rgba(0,136,204,0.15)",
+                    border: "1px solid rgba(0,136,204,0.25)",
+                    color: "rgba(0,200,255,0.9)",
+                    fontWeight: 700,
+                  }}
+                >
+                  ELITE
+                </div>
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.9)",
+                  lineHeight: 1.7,
+                }}
+              >
+                <div style={{ marginBottom: 6 }}>
+                  ⚽ <strong>Arsenal vs Chelsea</strong>
+                </div>
+                <div style={{ marginBottom: 6 }}>
+                  📈 <strong style={{ color: "#9be7bf" }}>3.42% margin</strong>{" "}
+                  — £1.71 profit @ £50
+                </div>
+                <div
+                  style={{
+                    marginBottom: 12,
+                    color: "rgba(255,255,255,0.55)",
+                    fontSize: 12,
+                  }}
+                >
+                  Spread · in 45m
+                </div>
+                <div
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    borderRadius: 12,
+                    padding: "10px 12px",
+                    marginBottom: 8,
+                    border: "1px solid rgba(255,255,255,0.07)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "white",
+                      marginBottom: 2,
+                    }}
+                  >
+                    Leg 1 — Bet365
+                  </div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+                    Arsenal -0.5 @ 2.05 · Stake £24
+                  </div>
+                </div>
+                <div
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    borderRadius: 12,
+                    padding: "10px 12px",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "white",
+                      marginBottom: 2,
+                    }}
+                  >
+                    Leg 2 — Unibet
+                  </div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+                    Chelsea +0.5 @ 2.10 · Stake £26
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── PLANS ── */}
         <section style={{ padding: mob ? "40px 0" : "70px 0" }}>
           <div style={{ maxWidth: 620, marginBottom: 36 }}>
