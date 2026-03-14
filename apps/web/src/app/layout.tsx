@@ -19,6 +19,9 @@ export const metadata = {
   alternates: {
     canonical: "https://hitbet.to",
   },
+  verification: {
+    google: "cT44bn1rSLXFsXve5BMbHh-GpD_e8TOfc91mHLlS-50",
+  },
   openGraph: {
     type: "website",
     url: "https://hitbet.to",
