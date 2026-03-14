@@ -29,6 +29,9 @@ export default function NavBar() {
         <Link className="navLink" href="/guide">
           Guide
         </Link>
+        <Link className="navLink" href="/value">
+          Value
+        </Link>
         <Link className="navLink" href="/pricing">
           Plans
         </Link>
@@ -65,6 +68,13 @@ export default function NavBar() {
             onClick={() => setOpen(false)}
           >
             Guide
+          </Link>
+          <Link
+            className="mobileLink"
+            href="/value"
+            onClick={() => setOpen(false)}
+          >
+            Value
           </Link>
           <Link
             className="mobileLink"

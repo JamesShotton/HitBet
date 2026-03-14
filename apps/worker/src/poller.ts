@@ -1,8 +1,9 @@
 import { fetchSports, fetchOdds } from "./oddsApi.js";
 import { extractArbs } from "./arbEngine.js";
-import { replaceArbs } from "./db.js";
+import { replaceArbs, replaceValueBets } from "./db.js";
 import { startPropsScanner } from "./propsScanner.js";
 import { sendArbAlerts } from "./telegram.js";
+import { findValueBets } from "./valueEngine.js";
 
 // ─── Config ───────────────────────────────────────────────────
 // Target: ~5m credits/month = ~6,944/hour = ~115/minute = ~2/second
@@ -89,18 +90,23 @@ async function getActiveSports(): Promise<Set<string>> {
 }
 
 // ─── Scan a list of sports ────────────────────────────────────
-async function scanSports(keys: string[]): Promise<any[]> {
+async function scanSports(
+  keys: string[]
+): Promise<{ arbs: any[]; events: any[] }> {
   const activeSports = await getActiveSports();
   const toScan = keys.filter((k) => activeSports.has(k));
 
-  if (toScan.length === 0) return [];
+  if (toScan.length === 0) return { arbs: [], events: [] };
 
   const allArbs: any[] = [];
+  const allEvents: any[] = [];
 
   for (const key of toScan) {
     try {
       const events = await fetchOdds(key, BULK_MARKETS.join(","));
-      const arbs = extractArbs(Array.isArray(events) ? events : []);
+      const eventsArr = Array.isArray(events) ? events : [];
+      allEvents.push(...eventsArr);
+      const arbs = extractArbs(eventsArr);
       if (arbs.length > 0) {
         console.log(`[worker] ${key}: ${arbs.length} arbs`);
       }
@@ -110,7 +116,7 @@ async function scanSports(keys: string[]): Promise<any[]> {
     }
   }
 
-  return allArbs;
+  return { arbs: allArbs, events: allEvents };
 }
 
 // ─── Arb store — merge tier results ──────────────────────────
@@ -136,7 +142,7 @@ async function flushToDb() {
 async function tier1Cycle() {
   const start = Date.now();
   try {
-    const arbs = await scanSports(TIER1_SPORTS);
+    const { arbs, events: allEvents } = await scanSports(TIER1_SPORTS);
 
     // Group by sport and update store
     const bySport: Map<string, any[]> = new Map();
@@ -153,6 +159,13 @@ async function tier1Cycle() {
     console.log(`[tier1] done in ${elapsed}s — ${saved} arbs saved`);
     // Send Telegram alerts for new high-value arbs
     await sendArbAlerts(arbs);
+
+    // Find and save value bets from already-fetched events
+    const valueBets = findValueBets(allEvents);
+    if (valueBets.length > 0) {
+      await replaceValueBets(valueBets);
+      console.log(`[tier1] saved ${valueBets.length} value bets`);
+    }
   } catch (err) {
     console.error("[tier1] cycle failed", err);
   }
@@ -162,7 +175,7 @@ async function tier1Cycle() {
 async function tier2Cycle() {
   const start = Date.now();
   try {
-    const arbs = await scanSports(TIER2_SPORTS);
+    const { arbs } = await scanSports(TIER2_SPORTS);
 
     const bySport: Map<string, any[]> = new Map();
     for (const arb of arbs) {

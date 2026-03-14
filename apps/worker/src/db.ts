@@ -90,3 +90,53 @@ export async function replaceArbs(arbs: ArbRow[]) {
     );
   }
 }
+
+export type ValueBetRow = {
+  event: string;
+  sport_key: string;
+  market_group: string;
+  commence_time: string;
+  selection: string;
+  soft_book: string;
+  soft_odds: number;
+  point: string | null;
+  sharp_book: string;
+  sharp_odds: number;
+  ev_pct: number;
+  true_prob: number;
+  soft_implied_prob: number;
+  kelly_stake: number;
+  expected_profit: number;
+};
+
+export async function replaceValueBets(bets: ValueBetRow[]) {
+  await pool.query("delete from value_bets");
+  for (const b of bets) {
+    await pool.query(
+      `insert into value_bets (
+        event, sport_key, market_group, commence_time,
+        selection, soft_book, soft_odds, point,
+        sharp_book, sharp_odds,
+        ev_pct, true_prob, soft_implied_prob, kelly_stake, expected_profit,
+        created_at
+      ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,now())`,
+      [
+        b.event,
+        b.sport_key,
+        b.market_group,
+        b.commence_time,
+        b.selection,
+        b.soft_book,
+        b.soft_odds,
+        b.point,
+        b.sharp_book,
+        b.sharp_odds,
+        b.ev_pct,
+        b.true_prob,
+        b.soft_implied_prob,
+        b.kelly_stake,
+        b.expected_profit,
+      ]
+    );
+  }
+}
