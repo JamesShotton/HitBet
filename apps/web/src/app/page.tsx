@@ -19,7 +19,7 @@ const LIVE_ARBS = [
     event: "Arsenal vs Chelsea",
     sport: "EPL",
     margin: "3.42%",
-    profit: "£1.71",
+    profit: "£17.10",
     book1: "Bet365",
     book2: "Unibet",
   },
@@ -27,7 +27,7 @@ const LIVE_ARBS = [
     event: "Lakers vs Celtics",
     sport: "NBA",
     margin: "2.88%",
-    profit: "£1.44",
+    profit: "£14.40",
     book1: "William Hill",
     book2: "Betway",
   },
@@ -35,7 +35,7 @@ const LIVE_ARBS = [
     event: "Djokovic vs Alcaraz",
     sport: "ATP",
     margin: "2.11%",
-    profit: "£1.06",
+    profit: "£10.55",
     book1: "Paddy Power",
     book2: "Betfair",
   },
@@ -43,7 +43,7 @@ const LIVE_ARBS = [
     event: "Man City vs Liverpool",
     sport: "EPL",
     margin: "1.74%",
-    profit: "£0.87",
+    profit: "£8.70",
     book1: "888sport",
     book2: "Coral",
   },
@@ -51,7 +51,7 @@ const LIVE_ARBS = [
     event: "Sinner vs Zverev",
     sport: "ATP",
     margin: "1.31%",
-    profit: "£0.66",
+    profit: "£6.55",
     book1: "Ladbrokes",
     book2: "Betfair",
   },
@@ -59,14 +59,14 @@ const LIVE_ARBS = [
     event: "Real Madrid vs Barca",
     sport: "La Liga",
     margin: "2.55%",
-    profit: "£1.28",
+    profit: "£12.75",
     book1: "Bet365",
     book2: "Betfair",
   },
 ];
 
 const STATS = [
-  { value: "2–5%", label: "Typical arb margin" },
+  { value: "2–13%", label: "Live arb margins today" },
   { value: "<60s", label: "Execution time" },
   { value: "30s", label: "Feed refresh" },
   { value: "40+", label: "Books scanned" },
@@ -364,7 +364,7 @@ export default function Home() {
                 }}
               >
                 <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-                  EPL · h2h · in 45m
+                  EPL · Spread · in 45m
                 </span>
                 <span
                   style={{
@@ -398,15 +398,15 @@ export default function Home() {
                 {[
                   {
                     book: "Bet365",
-                    pick: "Arsenal win",
+                    pick: "Arsenal -0.5",
                     odds: "@ 2.05",
-                    stake: "£24.63",
+                    stake: "£246",
                   },
                   {
                     book: "Unibet",
-                    pick: "Chelsea win",
+                    pick: "Chelsea +0.5",
                     odds: "@ 2.10",
-                    stake: "£25.37",
+                    stake: "£254",
                   },
                 ].map((leg, i) => (
                   <div
@@ -469,7 +469,7 @@ export default function Home() {
                 }}
               >
                 <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-                  Total stake: £50.00
+                  Total stake: £500.00
                 </span>
                 <span
                   style={{
@@ -482,7 +482,7 @@ export default function Home() {
                     border: "1px solid rgba(0,255,140,0.15)",
                   }}
                 >
-                  +£1.71 guaranteed
+                  +£17.10 guaranteed
                 </span>
               </div>
             </div>
