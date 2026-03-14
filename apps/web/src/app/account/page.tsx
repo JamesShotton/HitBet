@@ -282,6 +282,48 @@ export default function AccountPage() {
           </div>
         )}
 
+        {/* Telegram channel for Elite */}
+        {hasAccess && info?.plan === "elite" && (
+          <div style={s.card}>
+            <div style={s.cardTitle}>📣 Telegram alerts</div>
+            <div
+              style={{
+                fontSize: 13,
+                color: "rgba(255,255,255,0.55)",
+                lineHeight: 1.6,
+                marginBottom: 14,
+              }}
+            >
+              Join the HitBet Elite channel to receive real-time arb alerts as
+              they appear in the feed. Read-only — we post, you act.
+            </div>
+            <a
+              href={
+                process.env.NEXT_PUBLIC_TELEGRAM_CHANNEL_URL ??
+                "https://t.me/hitbetalerts"
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 16px",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 14,
+                color: "white",
+                background:
+                  "linear-gradient(90deg, rgba(0,136,204,0.9), rgba(0,180,255,0.7))",
+                border: "1px solid rgba(0,180,255,0.3)",
+                textDecoration: "none",
+              }}
+            >
+              <span>✈️</span> Join Telegram channel
+            </a>
+          </div>
+        )}
+
         {/* Pro → Elite upgrade nudge */}
         {hasAccess && info?.plan === "pro" && (
           <div style={s.upgradeCard}>

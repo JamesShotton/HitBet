@@ -2,6 +2,7 @@ import { fetchSports, fetchOdds } from "./oddsApi.js";
 import { extractArbs } from "./arbEngine.js";
 import { replaceArbs } from "./db.js";
 import { startPropsScanner } from "./propsScanner.js";
+import { sendArbAlerts } from "./telegram.js";
 
 // ─── Config ───────────────────────────────────────────────────
 // Target: ~5m credits/month = ~6,944/hour = ~115/minute = ~2/second
@@ -145,6 +146,8 @@ async function tier1Cycle() {
     const saved = await flushToDb();
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
     console.log(`[tier1] done in ${elapsed}s — ${saved} arbs saved`);
+    // Send Telegram alerts for new high-value arbs
+    await sendArbAlerts(arbs);
   } catch (err) {
     console.error("[tier1] cycle failed", err);
   }
