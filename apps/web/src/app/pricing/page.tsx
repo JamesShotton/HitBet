@@ -191,22 +191,6 @@ export default function PricingPage() {
               flexDirection: "column",
             }}
           >
-            <div
-              style={{
-                position: "absolute",
-                top: 14,
-                right: 14,
-                padding: "5px 10px",
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 700,
-                background: "rgba(255,90,180,0.14)",
-                border: "1px solid rgba(255,90,180,0.22)",
-                color: "rgba(255,255,255,0.9)",
-              }}
-            >
-              Most popular
-            </div>
 
             <div
               style={{

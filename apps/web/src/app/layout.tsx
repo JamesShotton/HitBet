@@ -8,8 +8,16 @@ const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata = {
   title: "HitBet — Live Arbitrage Feed",
-  description:
-    "Scan 40+ sportsbooks in real time. Guaranteed profit, pure maths.",
+  description: "Scan 40+ sportsbooks in real time. Guaranteed profit, pure maths.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/icon-16.png", type: "image/png", sizes: "16x16" },
+    ],
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+    shortcut: "/favicon.ico",
+  },
 };
 
 export const viewport = {
@@ -39,16 +47,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <footer className="footer">
                 <div className="footerInner">
                   <div className="small">
-                    Informational tool only. Always verify markets, odds, rules,
-                    and settlement conditions before placing bets.
+                    Informational tool only. Always verify markets, odds, rules, and settlement conditions before placing bets.
                   </div>
-                  <div className="small muted">
-                    © {new Date().getFullYear()} HitBet
-                  </div>
+                  <div className="small muted">© {new Date().getFullYear()} HitBet</div>
                 </div>
               </footer>
             </div>
           </div>
+
         </Providers>
       </body>
     </html>
