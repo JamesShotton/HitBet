@@ -32,11 +32,12 @@ export async function POST(req: Request) {
       const session = event.data.object as Stripe.Checkout.Session;
 
       const email =
-        session.customer_details?.email ||
-        session.metadata?.user_email ||
-        null;
+        session.customer_details?.email || session.metadata?.user_email || null;
 
-      const plan = session.metadata?.plan === "elite" ? "elite" : "pro";
+      const rawPlan = session.metadata?.plan ?? "arbitrage";
+      const plan = ["arbitrage", "longrun", "both"].includes(rawPlan)
+        ? rawPlan
+        : "arbitrage";
       const isTrial = session.metadata?.is_trial === "true";
 
       if (email) {
@@ -50,8 +51,7 @@ export async function POST(req: Request) {
           }
         }
 
-        const status =
-          isTrial ? "trialing" : "active";
+        const status = isTrial ? "trialing" : "active";
 
         await pool.query(
           `
@@ -79,7 +79,9 @@ export async function POST(req: Request) {
             status,
             plan,
             typeof session.customer === "string" ? session.customer : null,
-            typeof session.subscription === "string" ? session.subscription : null,
+            typeof session.subscription === "string"
+              ? session.subscription
+              : null,
             trialExpiresAt,
           ]
         );
@@ -97,8 +99,7 @@ export async function POST(req: Request) {
 
       // When trial converts to active, clear trial_expires_at
       const trialEnded =
-        subscription.status === "active" &&
-        !subscription.trial_end;
+        subscription.status === "active" && !subscription.trial_end;
 
       await pool.query(
         `
@@ -130,6 +131,8 @@ export async function POST(req: Request) {
     return new Response("ok", { status: 200 });
   } catch (err: any) {
     console.error("Stripe webhook handler failed:", err);
-    return new Response(`Webhook handler failed: ${err.message}`, { status: 500 });
+    return new Response(`Webhook handler failed: ${err.message}`, {
+      status: 500,
+    });
   }
 }

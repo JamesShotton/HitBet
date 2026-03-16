@@ -51,6 +51,8 @@ type ApiResponse = {
   arbs2way: Arb[];
   arbs3way: Arb[];
   error?: string;
+  noArbAccess?: boolean;
+  hasLongRun?: boolean;
 };
 
 const fmt = (v: number) => `£${v.toFixed(2)}`;
@@ -997,6 +999,8 @@ export default function DashboardPage() {
   const [plan, setPlan] = useState<string | null>(null);
   const [trial, setTrial] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
+  const [noArbAccess, setNoArbAccess] = useState(false);
+  const [hasLongRun, setHasLongRun] = useState(false);
   const [stakeInput, setStakeInput] = useState("50");
   const [tab, setTab] = useState<"2way" | "3way">("2way");
   const [marketCat, setMarketCat] = useState("all");
@@ -1068,6 +1072,8 @@ export default function DashboardPage() {
       setPlan(data.plan ?? null);
       setTrial(Boolean(data.trial));
       setTrialDaysLeft(data.trialDaysLeft ?? 0);
+      setNoArbAccess(Boolean(data.noArbAccess));
+      setHasLongRun(Boolean(data.hasLongRun));
       setUpdatedAt(new Date());
     } catch (e: any) {
       setError(e?.message || "Failed to load");
@@ -1100,7 +1106,9 @@ export default function DashboardPage() {
   }, [load, mob]);
 
   const stake = Math.max(1, Number(stakeInput) || 50);
-  const isElite = plan === "elite" && active;
+  const isElite = (plan === "longrun" || plan === "both") && active;
+  const hasArbAccess =
+    ((plan === "arbitrage" || plan === "both") && active) || isElite;
   const activeArbs = tab === "2way" ? arbs2 : arbs3;
 
   const sports = useMemo(
@@ -2227,6 +2235,57 @@ export default function DashboardPage() {
             </Link>
           </div>
         )}
+        {noArbAccess && !loading && (
+          <div
+            style={{
+              border: "1px solid rgba(120,110,255,0.2)",
+              background: "rgba(120,110,255,0.06)",
+              borderRadius: 14,
+              padding: "16px 18px",
+              marginBottom: 16,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  color: "white",
+                  fontSize: 15,
+                  fontWeight: 800,
+                  marginBottom: 3,
+                }}
+              >
+                You have Long Run — add Arbitrage for the arb feed
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>
+                Your Long Run plan gives you the value watchlist. Add Arbitrage
+                (£39.99/mo) to unlock the live arb feed too.
+              </div>
+            </div>
+            <Link
+              href="/checkout?plan=arbitrage"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "9px 14px",
+                borderRadius: 11,
+                fontWeight: 700,
+                fontSize: 13,
+                color: "white",
+                background:
+                  "linear-gradient(90deg, rgba(120,110,255,0.95), rgba(0,190,255,0.75))",
+                border: "1px solid rgba(120,110,255,0.4)",
+                textDecoration: "none",
+              }}
+            >
+              Add Arbitrage — £39.99/mo
+            </Link>
+          </div>
+        )}
 
         {/* Stats */}
         <div
@@ -2248,11 +2307,16 @@ export default function DashboardPage() {
             },
             {
               l: "Plan",
-              v: plan
-                ? plan[0].toUpperCase() + plan.slice(1)
-                : signedIn
-                ? "None"
-                : "Guest",
+              v:
+                plan === "longrun"
+                  ? "Long Run"
+                  : plan === "arbitrage"
+                  ? "Arbitrage"
+                  : plan
+                  ? plan[0].toUpperCase() + plan.slice(1)
+                  : signedIn
+                  ? "None"
+                  : "Guest",
             },
           ].map(({ l, v }) => (
             <div

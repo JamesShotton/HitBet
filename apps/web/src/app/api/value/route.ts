@@ -25,7 +25,8 @@ export async function GET() {
       status === "trialing" ||
       (trialExpiresAt && new Date(trialExpiresAt) > new Date());
     const hasAccess = isActive || isTrialing;
-    const isElite = plan === "elite" && hasAccess;
+    // Long Run or both plans get value access
+    const isElite = (plan === "longrun" || plan === "both") && hasAccess;
 
     if (!isElite) {
       return Response.json({

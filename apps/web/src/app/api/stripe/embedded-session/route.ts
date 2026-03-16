@@ -16,13 +16,18 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const plan = body?.plan === "elite" ? "elite" : "pro";
+    const rawPlan = body?.plan ?? "arbitrage";
+    const plan = ["arbitrage", "longrun", "both"].includes(rawPlan)
+      ? rawPlan
+      : "arbitrage";
     const isTrial = body?.trial === true;
 
     const priceId =
-      plan === "elite"
-        ? process.env.STRIPE_PRICE_ELITE
-        : process.env.STRIPE_PRICE_PRO;
+      plan === "both"
+        ? process.env.STRIPE_PRICE_BOTH
+        : plan === "longrun"
+        ? process.env.STRIPE_PRICE_LONGRUN
+        : process.env.STRIPE_PRICE_ARBITRAGE;
 
     if (!priceId) {
       return NextResponse.json(

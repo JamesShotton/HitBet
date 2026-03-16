@@ -1309,6 +1309,1127 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ── LONG RUN EDGE ── */}
+        <section style={{ padding: mob ? "40px 0" : "70px 0" }}>
+          <div style={{ maxWidth: 620, marginBottom: 36 }}>
+            <div
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.16em",
+                color: "rgba(0,190,255,0.7)",
+                marginBottom: 12,
+              }}
+            >
+              LONG RUN EDGE
+            </div>
+            <h2
+              style={{
+                fontSize: mob ? 28 : 40,
+                fontWeight: 900,
+                letterSpacing: "-1px",
+                color: "white",
+                margin: "0 0 14px",
+                lineHeight: 1.1,
+              }}
+            >
+              The house wins because of the edge. Now you have one.
+            </h2>
+            <p
+              style={{
+                fontSize: 15,
+                color: "rgba(255,255,255,0.6)",
+                lineHeight: 1.75,
+                margin: 0,
+              }}
+            >
+              Every bookmaker profits long-term because they price odds slightly
+              below true probability. The Long Run plan flips this — finding
+              spots where soft books overprice outcomes, giving you the
+              mathematical edge instead.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: mob ? "1fr" : "1fr 1fr",
+              gap: 16,
+              marginBottom: 24,
+            }}
+          >
+            {/* How edge works visual */}
+            <div
+              style={{
+                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(10,14,20,0.5)",
+                borderRadius: 20,
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.5)",
+                  marginBottom: 16,
+                }}
+              >
+                Without edge — bookmaker wins
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column" as const,
+                  gap: 8,
+                  marginBottom: 16,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      True probability
+                    </span>
+                    <span style={{ fontSize: 12, color: "white" }}>50%</span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "50%",
+                        height: "100%",
+                        background: "rgba(255,255,255,0.3)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      Bookie implied prob (@ 1.90)
+                    </span>
+                    <span style={{ fontSize: 12, color: "#f87171" }}>
+                      52.6%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "52.6%",
+                        height: "100%",
+                        background: "rgba(248,113,113,0.6)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "rgba(248,113,113,0.08)",
+                  border: "1px solid rgba(248,113,113,0.15)",
+                  fontSize: 13,
+                  color: "rgba(248,113,113,0.9)",
+                }}
+              >
+                -2.6% edge — you lose long term
+              </div>
+            </div>
+
+            <div
+              style={{
+                border: "1px solid rgba(0,190,255,0.2)",
+                background: "rgba(0,190,255,0.04)",
+                borderRadius: 20,
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.5)",
+                  marginBottom: 16,
+                }}
+              >
+                With Long Run edge — you win
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column" as const,
+                  gap: 8,
+                  marginBottom: 16,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      True probability (Exchange)
+                    </span>
+                    <span style={{ fontSize: 12, color: "white" }}>50%</span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "50%",
+                        height: "100%",
+                        background: "rgba(255,255,255,0.3)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      Soft book price (@ 2.20)
+                    </span>
+                    <span style={{ fontSize: 12, color: "#9be7bf" }}>
+                      45.5%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "45.5%",
+                        height: "100%",
+                        background: "rgba(0,255,140,0.4)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "rgba(0,255,140,0.07)",
+                  border: "1px solid rgba(0,255,140,0.15)",
+                  fontSize: 13,
+                  color: "#9be7bf",
+                }}
+              >
+                +10% edge — you profit long term
+              </div>
+            </div>
+          </div>
+
+          {/* Key points */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: mob ? "1fr" : "repeat(3, 1fr)",
+              gap: 12,
+            }}
+          >
+            {[
+              {
+                icon: "📊",
+                title: "Maths, not luck",
+                body: "If your edge is +10%, placing 100 bets at £50 each gives an expected profit of £500 — regardless of which individual bets win or lose.",
+              },
+              {
+                icon: "🎯",
+                title: "Soft books lag sharp money",
+                body: "When sharp bettors move the Betfair market, soft books are slow to adjust. That window of mispricing is your edge — and we find it automatically.",
+              },
+              {
+                icon: "📈",
+                title: "Volume is the strategy",
+                body: "A single value bet can lose. 50 value bets at +10% edge cannot. The Long Run plan is built for volume — the more you place, the more reliable the profit.",
+              },
+            ].map(({ icon, title, body }) => (
+              <div
+                key={title}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: "rgba(255,255,255,0.02)",
+                  borderRadius: 16,
+                  padding: 20,
+                }}
+              >
+                <div style={{ fontSize: 24, marginBottom: 12 }}>{icon}</div>
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 800,
+                    color: "white",
+                    marginBottom: 8,
+                  }}
+                >
+                  {title}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "rgba(255,255,255,0.6)",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {body}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div
+            style={{
+              marginTop: 24,
+              padding: "18px 22px",
+              borderRadius: 16,
+              border: "1px solid rgba(120,110,255,0.2)",
+              background: "rgba(120,110,255,0.05)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 16,
+              flexWrap: "wrap" as const,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 800,
+                  color: "white",
+                  marginBottom: 4,
+                }}
+              >
+                Start building your edge today
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+                Long Run plan — arbs + value bets + Telegram alerts. £59.99/mo.
+              </div>
+            </div>
+            <a
+              href="/pricing"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "11px 20px",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 14,
+                color: "white",
+                background: GRAD,
+                border: "1px solid rgba(120,110,255,0.4)",
+                textDecoration: "none",
+              }}
+            >
+              Try free — 7 days
+            </a>
+          </div>
+        </section>
+
+        {/* ── LONG RUN EDGE ── */}
+        <section style={{ padding: mob ? "40px 0" : "70px 0" }}>
+          <div style={{ maxWidth: 620, marginBottom: 36 }}>
+            <div
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.16em",
+                color: "rgba(0,190,255,0.7)",
+                marginBottom: 12,
+              }}
+            >
+              LONG RUN EDGE
+            </div>
+            <h2
+              style={{
+                fontSize: mob ? 28 : 40,
+                fontWeight: 900,
+                letterSpacing: "-1px",
+                color: "white",
+                margin: "0 0 14px",
+                lineHeight: 1.1,
+              }}
+            >
+              The house wins because of the edge. Now you have one.
+            </h2>
+            <p
+              style={{
+                fontSize: 15,
+                color: "rgba(255,255,255,0.6)",
+                lineHeight: 1.75,
+                margin: 0,
+              }}
+            >
+              Every bookmaker profits long-term because they price odds slightly
+              below true probability. The Long Run plan flips this — finding
+              spots where soft books overprice outcomes, giving you the
+              mathematical edge instead.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: mob ? "1fr" : "1fr 1fr",
+              gap: 16,
+              marginBottom: 24,
+            }}
+          >
+            <div
+              style={{
+                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(10,14,20,0.5)",
+                borderRadius: 20,
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.5)",
+                  marginBottom: 16,
+                }}
+              >
+                Without edge — bookmaker wins
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column" as const,
+                  gap: 8,
+                  marginBottom: 16,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      True probability
+                    </span>
+                    <span style={{ fontSize: 12, color: "white" }}>50%</span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "50%",
+                        height: "100%",
+                        background: "rgba(255,255,255,0.3)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      Bookie implied prob (@ 1.90)
+                    </span>
+                    <span style={{ fontSize: 12, color: "#f87171" }}>
+                      52.6%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "52.6%",
+                        height: "100%",
+                        background: "rgba(248,113,113,0.6)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "rgba(248,113,113,0.08)",
+                  border: "1px solid rgba(248,113,113,0.15)",
+                  fontSize: 13,
+                  color: "rgba(248,113,113,0.9)",
+                }}
+              >
+                -2.6% edge — you lose long term
+              </div>
+            </div>
+
+            <div
+              style={{
+                border: "1px solid rgba(0,190,255,0.2)",
+                background: "rgba(0,190,255,0.04)",
+                borderRadius: 20,
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.5)",
+                  marginBottom: 16,
+                }}
+              >
+                With Long Run edge — you win
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column" as const,
+                  gap: 8,
+                  marginBottom: 16,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      True probability (Exchange)
+                    </span>
+                    <span style={{ fontSize: 12, color: "white" }}>50%</span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "50%",
+                        height: "100%",
+                        background: "rgba(255,255,255,0.3)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      Soft book price (@ 2.20)
+                    </span>
+                    <span style={{ fontSize: 12, color: "#9be7bf" }}>
+                      45.5%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "45.5%",
+                        height: "100%",
+                        background: "rgba(0,255,140,0.4)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "rgba(0,255,140,0.07)",
+                  border: "1px solid rgba(0,255,140,0.15)",
+                  fontSize: 13,
+                  color: "#9be7bf",
+                }}
+              >
+                +10% edge — you profit long term
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: mob ? "1fr" : "repeat(3, 1fr)",
+              gap: 12,
+            }}
+          >
+            {[
+              {
+                icon: "📊",
+                title: "Maths, not luck",
+                body: "If your edge is +10%, placing 100 bets at £50 each gives an expected profit of £500 — regardless of which individual bets win or lose.",
+              },
+              {
+                icon: "🎯",
+                title: "Soft books lag sharp money",
+                body: "When sharp bettors move the Betfair market, soft books are slow to adjust. That window of mispricing is your edge — and we find it automatically.",
+              },
+              {
+                icon: "📈",
+                title: "Volume is the strategy",
+                body: "A single value bet can lose. 50 value bets at +10% edge cannot. The Long Run plan is built for volume — the more you place, the more reliable the profit.",
+              },
+            ].map(({ icon, title, body }) => (
+              <div
+                key={title}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: "rgba(255,255,255,0.02)",
+                  borderRadius: 16,
+                  padding: 20,
+                }}
+              >
+                <div style={{ fontSize: 24, marginBottom: 12 }}>{icon}</div>
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 800,
+                    color: "white",
+                    marginBottom: 8,
+                  }}
+                >
+                  {title}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "rgba(255,255,255,0.6)",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {body}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div
+            style={{
+              marginTop: 24,
+              padding: "18px 22px",
+              borderRadius: 16,
+              border: "1px solid rgba(120,110,255,0.2)",
+              background: "rgba(120,110,255,0.05)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 16,
+              flexWrap: "wrap" as const,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 800,
+                  color: "white",
+                  marginBottom: 4,
+                }}
+              >
+                Start building your edge today
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+                Long Run plan — arbs + value bets + Telegram alerts. £59.99/mo.
+              </div>
+            </div>
+            <a
+              href="/pricing"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "11px 20px",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 14,
+                color: "white",
+                background: GRAD,
+                border: "1px solid rgba(120,110,255,0.4)",
+                textDecoration: "none",
+              }}
+            >
+              Try free — 7 days
+            </a>
+          </div>
+        </section>
+
+        {/* ── LONG RUN EDGE ── */}
+        <section style={{ padding: mob ? "40px 0" : "70px 0" }}>
+          <div style={{ maxWidth: 620, marginBottom: 36 }}>
+            <div
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.16em",
+                color: "rgba(0,190,255,0.7)",
+                marginBottom: 12,
+              }}
+            >
+              LONG RUN EDGE
+            </div>
+            <h2
+              style={{
+                fontSize: mob ? 28 : 40,
+                fontWeight: 900,
+                letterSpacing: "-1px",
+                color: "white",
+                margin: "0 0 14px",
+                lineHeight: 1.1,
+              }}
+            >
+              The house wins because of the edge. Now you have one.
+            </h2>
+            <p
+              style={{
+                fontSize: 15,
+                color: "rgba(255,255,255,0.6)",
+                lineHeight: 1.75,
+                margin: 0,
+              }}
+            >
+              Every bookmaker profits long-term because they price odds slightly
+              below true probability. The Long Run plan flips this — finding
+              spots where soft books overprice outcomes, giving you the
+              mathematical edge instead.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: mob ? "1fr" : "1fr 1fr",
+              gap: 16,
+              marginBottom: 24,
+            }}
+          >
+            <div
+              style={{
+                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(10,14,20,0.5)",
+                borderRadius: 20,
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.5)",
+                  marginBottom: 16,
+                }}
+              >
+                Without edge — bookmaker wins
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column" as const,
+                  gap: 8,
+                  marginBottom: 16,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      True probability
+                    </span>
+                    <span style={{ fontSize: 12, color: "white" }}>50%</span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "50%",
+                        height: "100%",
+                        background: "rgba(255,255,255,0.3)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      Bookie implied prob (@ 1.90)
+                    </span>
+                    <span style={{ fontSize: 12, color: "#f87171" }}>
+                      52.6%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "52.6%",
+                        height: "100%",
+                        background: "rgba(248,113,113,0.6)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "rgba(248,113,113,0.08)",
+                  border: "1px solid rgba(248,113,113,0.15)",
+                  fontSize: 13,
+                  color: "rgba(248,113,113,0.9)",
+                }}
+              >
+                -2.6% edge — you lose long term
+              </div>
+            </div>
+
+            <div
+              style={{
+                border: "1px solid rgba(0,190,255,0.2)",
+                background: "rgba(0,190,255,0.04)",
+                borderRadius: 20,
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.5)",
+                  marginBottom: 16,
+                }}
+              >
+                With Long Run edge — you win
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column" as const,
+                  gap: 8,
+                  marginBottom: 16,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      True probability (Exchange)
+                    </span>
+                    <span style={{ fontSize: 12, color: "white" }}>50%</span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "50%",
+                        height: "100%",
+                        background: "rgba(255,255,255,0.3)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}
+                    >
+                      Soft book price (@ 2.20)
+                    </span>
+                    <span style={{ fontSize: 12, color: "#9be7bf" }}>
+                      45.5%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "45.5%",
+                        height: "100%",
+                        background: "rgba(0,255,140,0.4)",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "rgba(0,255,140,0.07)",
+                  border: "1px solid rgba(0,255,140,0.15)",
+                  fontSize: 13,
+                  color: "#9be7bf",
+                }}
+              >
+                +10% edge — you profit long term
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: mob ? "1fr" : "repeat(3, 1fr)",
+              gap: 12,
+            }}
+          >
+            {[
+              {
+                icon: "📊",
+                title: "Maths, not luck",
+                body: "If your edge is +10%, placing 100 bets at £50 each gives an expected profit of £500 — regardless of which individual bets win or lose.",
+              },
+              {
+                icon: "🎯",
+                title: "Soft books lag sharp money",
+                body: "When sharp bettors move the Betfair market, soft books are slow to adjust. That window of mispricing is your edge — and we find it automatically.",
+              },
+              {
+                icon: "📈",
+                title: "Volume is the strategy",
+                body: "A single value bet can lose. 50 value bets at +10% edge cannot. The Long Run plan is built for volume — the more you place, the more reliable the profit.",
+              },
+            ].map(({ icon, title, body }) => (
+              <div
+                key={title}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: "rgba(255,255,255,0.02)",
+                  borderRadius: 16,
+                  padding: 20,
+                }}
+              >
+                <div style={{ fontSize: 24, marginBottom: 12 }}>{icon}</div>
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 800,
+                    color: "white",
+                    marginBottom: 8,
+                  }}
+                >
+                  {title}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "rgba(255,255,255,0.6)",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {body}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div
+            style={{
+              marginTop: 24,
+              padding: "18px 22px",
+              borderRadius: 16,
+              border: "1px solid rgba(120,110,255,0.2)",
+              background: "rgba(120,110,255,0.05)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 16,
+              flexWrap: "wrap" as const,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 800,
+                  color: "white",
+                  marginBottom: 4,
+                }}
+              >
+                Start building your edge today
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
+                Long Run plan — arbs + value bets + Telegram alerts. £59.99/mo.
+              </div>
+            </div>
+            <a
+              href="/pricing"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "11px 20px",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 14,
+                color: "white",
+                background: GRAD,
+                border: "1px solid rgba(120,110,255,0.4)",
+                textDecoration: "none",
+              }}
+            >
+              Try free — 7 days
+            </a>
+          </div>
+        </section>
+
         {/* ── FOOTER CTA ── */}
         <section
           style={{

@@ -24,7 +24,7 @@ function PlanBadge({
   if (!plan) return <span style={b.free}>Free</span>;
   const label = plan[0].toUpperCase() + plan.slice(1);
   if (isTrialing) return <span style={b.trial}>{label} · Trial</span>;
-  if (plan === "elite") return <span style={b.elite}>{label}</span>;
+  if (plan === "longrun") return <span style={b.elite}>{label}</span>;
   return <span style={b.pro}>{label}</span>;
 }
 
@@ -229,16 +229,34 @@ export default function AccountPage() {
             <div style={s.cardTitle}>What's included</div>
             <div style={s.featureList}>
               {[
-                { label: "Live 2-way arb feed", included: true },
-                { label: "Stake split calculator", included: true },
-                { label: "Step-by-step placement cards", included: true },
-                { label: "30s feed refresh", included: true },
+                {
+                  label: "Live 2-way arb feed",
+                  included: info?.plan === "arbitrage" || info?.plan === "both",
+                },
+                {
+                  label: "Stake split calculator",
+                  included: info?.plan === "arbitrage" || info?.plan === "both",
+                },
+                {
+                  label: "Step-by-step placement cards",
+                  included: info?.plan === "arbitrage" || info?.plan === "both",
+                },
+                {
+                  label: "30s feed refresh",
+                  included: info?.plan === "arbitrage" || info?.plan === "both",
+                },
                 {
                   label: "3-way football arbs (1X2)",
-                  included: info?.plan === "elite",
+                  included: info?.plan === "longrun",
                 },
-                { label: "Telegram alerts", included: info?.plan === "elite" },
-                { label: "Value watchlist", included: info?.plan === "elite" },
+                {
+                  label: "Telegram alerts",
+                  included: info?.plan === "longrun" || info?.plan === "both",
+                },
+                {
+                  label: "Value watchlist",
+                  included: info?.plan === "longrun" || info?.plan === "both",
+                },
               ].map(({ label, included }) => (
                 <div key={label} style={s.featureRow}>
                   <span
@@ -283,7 +301,7 @@ export default function AccountPage() {
         )}
 
         {/* Telegram channel for Elite */}
-        {hasAccess && info?.plan === "elite" && (
+        {hasAccess && (info?.plan === "longrun" || info?.plan === "both") && (
           <div style={s.card}>
             <div style={s.cardTitle}>📣 Telegram alerts</div>
             <div
@@ -324,17 +342,34 @@ export default function AccountPage() {
           </div>
         )}
 
-        {/* Pro → Elite upgrade nudge */}
-        {hasAccess && info?.plan === "pro" && (
+        {/* Cross-sell: arbitrage user missing longrun */}
+        {hasAccess && info?.plan === "arbitrage" && (
           <div style={s.upgradeCard}>
             <div>
-              <div style={s.upgradeTitle}>Upgrade to Elite</div>
+              <div style={s.upgradeTitle}>Add Long Run — £59.99/mo</div>
               <div style={s.upgradeSub}>
-                3-way arbs, Telegram alerts and value watchlist. £20/mo more.
+                Unlock value bets, Telegram alerts and 3-way arbs alongside your
+                arb feed.
               </div>
             </div>
-            <Link href="/checkout?plan=elite" style={s.btnP}>
-              Upgrade → £59.99/mo
+            <Link href="/checkout?plan=longrun" style={s.btnP}>
+              Add Long Run
+            </Link>
+          </div>
+        )}
+
+        {/* Cross-sell: longrun user missing arbitrage */}
+        {hasAccess && (info?.plan === "longrun" || info?.plan === "both") && (
+          <div style={s.upgradeCard}>
+            <div>
+              <div style={s.upgradeTitle}>Add Arbitrage — £39.99/mo</div>
+              <div style={s.upgradeSub}>
+                Add the live guaranteed arb feed with step-by-step placement
+                cards.
+              </div>
+            </div>
+            <Link href="/checkout?plan=arbitrage" style={s.btnP}>
+              Add Arbitrage
             </Link>
           </div>
         )}

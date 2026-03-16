@@ -87,7 +87,14 @@ export async function GET() {
       status === "trialing" ||
       (trialExpiresAt && new Date(trialExpiresAt) > new Date());
     const hasAccess = isActive || isTrialing;
-    const isElite = plan === "elite" && hasAccess;
+
+    // Plan access logic:
+    // "arbitrage" — 2-way arbs only
+    // "longrun"   — value watchlist + Telegram only (no arbs)
+    // both plans  — everything (user has two subscriptions)
+    const hasArbitrage = hasAccess && (plan === "arbitrage" || plan === "both");
+    const hasLongRun = hasAccess && (plan === "longrun" || plan === "both");
+    const has3Way = hasLongRun; // 3-way arbs are a Long Run feature
 
     let trialDaysLeft = 0;
     if (isTrialing && trialExpiresAt) {
@@ -108,12 +115,27 @@ export async function GET() {
       });
     }
 
+    // No arb access — longrun only subscriber
+    if (!hasArbitrage) {
+      return Response.json({
+        signedIn: true,
+        active: true,
+        demo: false,
+        plan,
+        trial: isTrialing && !isActive,
+        trialDaysLeft,
+        arbs2way: [],
+        arbs3way: [],
+        noArbAccess: true,
+      });
+    }
+
     const result2 = await pool.query(
       `select *, created_at from arbs where legs = 2 order by margin desc limit 50`
     );
 
     let arbs3way: any[] = [];
-    if (isElite) {
+    if (has3Way) {
       const result3 = await pool.query(
         `select *, created_at from arbs where legs = 3 order by margin desc limit 50`
       );
@@ -129,6 +151,7 @@ export async function GET() {
       trialDaysLeft,
       arbs2way: result2.rows,
       arbs3way,
+      hasLongRun,
     });
   } catch (err) {
     console.error("API /api/arbs failed:", err);

@@ -14,11 +14,14 @@ function useIsMobile() {
   return mobile;
 }
 
+const GRAD =
+  "linear-gradient(90deg, rgba(120,110,255,0.95), rgba(0,190,255,0.75))";
+
 export default function PricingPage() {
   const router = useRouter();
   const mob = useIsMobile();
 
-  function go(plan: "pro" | "elite", trial = false) {
+  function go(plan: "arbitrage" | "longrun" | "both", trial = false) {
     router.push(`/checkout?plan=${plan}${trial ? "&trial=true" : ""}`);
   }
 
@@ -30,7 +33,7 @@ export default function PricingPage() {
           padding: mob ? "32px 0 60px" : "60px 0",
         }}
       >
-        <div style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 32 }}>
           <h1
             style={{
               fontSize: mob ? 34 : 44,
@@ -57,63 +60,49 @@ export default function PricingPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: mob ? "1fr" : "repeat(2, minmax(0, 1fr))",
-            gap: 16,
+            gridTemplateColumns: mob ? "1fr" : "repeat(3, minmax(0, 1fr))",
+            gap: 14,
           }}
         >
-          {/* PRO */}
+          {/* ARBITRAGE */}
           <div
             style={{
               position: "relative",
               borderRadius: 20,
-              padding: mob ? 20 : 24,
+              padding: mob ? 20 : 22,
               border: "1px solid rgba(255,255,255,0.10)",
               background: "rgba(10,14,20,0.55)",
-              boxShadow: "0 18px 60px rgba(0,0,0,0.35)",
               backdropFilter: "blur(10px)",
               display: "flex",
               flexDirection: "column",
             }}
           >
+            <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 2 }}>
+              Arbitrage
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.6, marginBottom: 16 }}>
+              Guaranteed profit, every time
+            </div>
             <div
               style={{
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                gap: 12,
+                fontSize: mob ? 38 : 42,
+                fontWeight: 900,
+                letterSpacing: -0.8,
+                lineHeight: 1,
                 marginBottom: 4,
               }}
             >
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>
-                  Pro
-                </div>
-                <div style={{ fontSize: 13, opacity: 0.7 }}>
-                  2-outcome arbs only
-                </div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div
-                  style={{
-                    fontSize: mob ? 36 : 44,
-                    fontWeight: 900,
-                    letterSpacing: -0.8,
-                    lineHeight: 1,
-                  }}
-                >
-                  £39.99
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 2 }}>
-                  /month
-                </div>
-              </div>
+              £39.99
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.55, marginBottom: 18 }}>
+              /month
             </div>
 
             <div
               style={{
                 height: 1,
-                background: "rgba(255,255,255,0.10)",
-                margin: "16px 0",
+                background: "rgba(255,255,255,0.08)",
+                marginBottom: 16,
               }}
             />
 
@@ -122,17 +111,17 @@ export default function PricingPage() {
                 margin: "0 0 20px",
                 paddingLeft: 18,
                 display: "grid",
-                gap: 10,
+                gap: 9,
                 flex: 1,
               }}
             >
               {[
-                "Full 2-outcome arb feed",
-                "Stake splits included",
-                "Faster refresh",
-                "Suspicious edge flags",
+                "Live 2-way arb feed",
+                "Exact stake splits",
+                "Step-by-step placement",
+                "30s refresh, 40+ books",
               ].map((f) => (
-                <li key={f} style={{ fontSize: 14, opacity: 0.9 }}>
+                <li key={f} style={{ fontSize: 13, opacity: 0.85 }}>
                   {f}
                 </li>
               ))}
@@ -142,17 +131,16 @@ export default function PricingPage() {
               style={{
                 width: "100%",
                 borderRadius: 12,
-                padding: "12px 14px",
+                padding: "11px 14px",
                 fontWeight: 800,
-                fontSize: 15,
+                fontSize: 14,
                 cursor: "pointer",
                 border: "1px solid rgba(120,110,255,0.45)",
-                background:
-                  "linear-gradient(90deg, rgba(120,110,255,0.95), rgba(0,190,255,0.75))",
+                background: GRAD,
                 color: "white",
-                marginBottom: 10,
+                marginBottom: 8,
               }}
-              onClick={() => go("pro", true)}
+              onClick={() => go("arbitrage", true)}
             >
               Try free — 7 days
             </button>
@@ -160,98 +148,81 @@ export default function PricingPage() {
               style={{
                 width: "100%",
                 borderRadius: 12,
-                padding: "11px 14px",
-                fontWeight: 700,
-                fontSize: 14,
+                padding: "10px 14px",
+                fontWeight: 600,
+                fontSize: 13,
                 cursor: "pointer",
-                border: "1px solid rgba(255,255,255,0.14)",
-                background: "rgba(255,255,255,0.06)",
-                color: "rgba(255,255,255,0.85)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.04)",
+                color: "rgba(255,255,255,0.75)",
               }}
-              onClick={() => go("pro")}
+              onClick={() => go("arbitrage")}
             >
               Subscribe now
             </button>
-            <div style={{ marginTop: 10, fontSize: 12, opacity: 0.5 }}>
-              Then £39.99/month. Cancel anytime.
+            <div style={{ marginTop: 8, fontSize: 11, opacity: 0.4 }}>
+              Then £39.99/mo. Cancel anytime.
             </div>
           </div>
 
-          {/* ELITE */}
+          {/* LONG RUN */}
           <div
             style={{
               position: "relative",
               borderRadius: 20,
-              padding: mob ? 20 : 24,
-              border: "1px solid rgba(118,111,255,0.35)",
+              padding: mob ? 20 : 22,
+              border: "1px solid rgba(255,255,255,0.10)",
               background: "rgba(10,14,20,0.55)",
-              boxShadow: "0 18px 80px rgba(71,109,255,0.18)",
               backdropFilter: "blur(10px)",
               display: "flex",
               flexDirection: "column",
             }}
           >
-
+            <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 2 }}>
+              Long Run
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.6, marginBottom: 16 }}>
+              Mathematical edge over time
+            </div>
             <div
               style={{
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                gap: 12,
+                fontSize: mob ? 38 : 42,
+                fontWeight: 900,
+                letterSpacing: -0.8,
+                lineHeight: 1,
                 marginBottom: 4,
               }}
             >
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>
-                  Elite
-                </div>
-                <div style={{ fontSize: 13, opacity: 0.7 }}>
-                  Expanded markets + curated angles
-                </div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div
-                  style={{
-                    fontSize: mob ? 36 : 44,
-                    fontWeight: 900,
-                    letterSpacing: -0.8,
-                    lineHeight: 1,
-                  }}
-                >
-                  £59.99
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 2 }}>
-                  /month
-                </div>
-              </div>
+              £59.99
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.55, marginBottom: 18 }}>
+              /month
             </div>
 
             <div
               style={{
                 height: 1,
-                background: "rgba(255,255,255,0.10)",
-                margin: "16px 0",
+                background: "rgba(255,255,255,0.08)",
+                marginBottom: 16,
               }}
             />
 
-            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 10 }}>
-              Everything in Pro, plus:
-            </div>
             <ul
               style={{
                 margin: "0 0 20px",
                 paddingLeft: 18,
                 display: "grid",
-                gap: 10,
+                gap: 9,
                 flex: 1,
               }}
             >
               {[
-                "3-way markets (where available)",
-                "Higher-variance value watchlist",
-                "Priority alerts (Telegram/email)",
+                "Value watchlist (positive EV bets)",
+                "3-way football arbs (1X2)",
+                "Telegram alerts",
+                "Kelly criterion stakes",
               ].map((f) => (
-                <li key={f} style={{ fontSize: 14, opacity: 0.9 }}>
+                <li key={f} style={{ fontSize: 13, opacity: 0.85 }}>
                   {f}
                 </li>
               ))}
@@ -261,17 +232,16 @@ export default function PricingPage() {
               style={{
                 width: "100%",
                 borderRadius: 12,
-                padding: "12px 14px",
+                padding: "11px 14px",
                 fontWeight: 800,
-                fontSize: 15,
+                fontSize: 14,
                 cursor: "pointer",
                 border: "1px solid rgba(120,110,255,0.45)",
-                background:
-                  "linear-gradient(90deg, rgba(120,110,255,0.95), rgba(0,190,255,0.75))",
+                background: GRAD,
                 color: "white",
-                marginBottom: 10,
+                marginBottom: 8,
               }}
-              onClick={() => go("elite", true)}
+              onClick={() => go("longrun", true)}
             >
               Try free — 7 days
             </button>
@@ -279,25 +249,179 @@ export default function PricingPage() {
               style={{
                 width: "100%",
                 borderRadius: 12,
-                padding: "11px 14px",
-                fontWeight: 700,
-                fontSize: 14,
+                padding: "10px 14px",
+                fontWeight: 600,
+                fontSize: 13,
                 cursor: "pointer",
-                border: "1px solid rgba(255,255,255,0.14)",
-                background: "rgba(255,255,255,0.06)",
-                color: "rgba(255,255,255,0.85)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.04)",
+                color: "rgba(255,255,255,0.75)",
               }}
-              onClick={() => go("elite")}
+              onClick={() => go("longrun")}
             >
               Subscribe now
             </button>
-            <div style={{ marginTop: 10, fontSize: 12, opacity: 0.5 }}>
-              Then £59.99/month. Cancel anytime.
+            <div style={{ marginTop: 8, fontSize: 11, opacity: 0.4 }}>
+              Then £59.99/mo. Cancel anytime.
+            </div>
+          </div>
+
+          {/* BOTH */}
+          <div
+            style={{
+              position: "relative",
+              borderRadius: 20,
+              padding: mob ? 20 : 22,
+              border: "1px solid rgba(118,111,255,0.4)",
+              background: "rgba(10,14,20,0.55)",
+              boxShadow: "0 20px 80px rgba(71,109,255,0.18)",
+              backdropFilter: "blur(10px)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: 14,
+                right: 14,
+                padding: "4px 9px",
+                borderRadius: 999,
+                fontSize: 10,
+                fontWeight: 800,
+                background: "rgba(255,90,180,0.14)",
+                border: "1px solid rgba(255,90,180,0.22)",
+                color: "rgba(255,255,255,0.9)",
+                letterSpacing: "0.05em",
+              }}
+            >
+              BEST VALUE
+            </div>
+
+            <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 2 }}>
+              Both Plans
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.6, marginBottom: 12 }}>
+              Arbitrage + Long Run
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                gap: 8,
+                marginBottom: 4,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: mob ? 38 : 42,
+                  fontWeight: 900,
+                  letterSpacing: -0.8,
+                  lineHeight: 1,
+                }}
+              >
+                £89.99
+              </div>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 18,
+              }}
+            >
+              <div style={{ fontSize: 12, opacity: 0.55 }}>/month</div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "2px 7px",
+                  borderRadius: 999,
+                  background: "rgba(0,255,140,0.1)",
+                  border: "1px solid rgba(0,255,140,0.2)",
+                  color: "#9be7bf",
+                }}
+              >
+                Save £10/mo
+              </div>
+            </div>
+
+            <div
+              style={{
+                height: 1,
+                background: "rgba(255,255,255,0.08)",
+                marginBottom: 16,
+              }}
+            />
+
+            <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 10 }}>
+              Everything in both plans:
+            </div>
+            <ul
+              style={{
+                margin: "0 0 20px",
+                paddingLeft: 18,
+                display: "grid",
+                gap: 9,
+                flex: 1,
+              }}
+            >
+              {[
+                "Full 2-way arb feed",
+                "Value watchlist + EV bets",
+                "3-way football arbs",
+                "Telegram alerts",
+                "Step-by-step placement",
+                "Kelly criterion stakes",
+              ].map((f) => (
+                <li key={f} style={{ fontSize: 13, opacity: 0.85 }}>
+                  {f}
+                </li>
+              ))}
+            </ul>
+
+            <button
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                padding: "11px 14px",
+                fontWeight: 800,
+                fontSize: 14,
+                cursor: "pointer",
+                border: "1px solid rgba(120,110,255,0.45)",
+                background: GRAD,
+                color: "white",
+                marginBottom: 8,
+              }}
+              onClick={() => go("both", true)}
+            >
+              Try free — 7 days
+            </button>
+            <button
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                padding: "10px 14px",
+                fontWeight: 600,
+                fontSize: 13,
+                cursor: "pointer",
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.04)",
+                color: "rgba(255,255,255,0.75)",
+              }}
+              onClick={() => go("both")}
+            >
+              Subscribe now
+            </button>
+            <div style={{ marginTop: 8, fontSize: 11, opacity: 0.4 }}>
+              Then £89.99/mo. Cancel anytime.
             </div>
           </div>
         </div>
 
-        <p style={{ marginTop: 16, fontSize: 12, opacity: 0.6 }}>
+        <p style={{ marginTop: 18, fontSize: 12, opacity: 0.5 }}>
           We provide information and tools for execution. Outcomes depend on
           timing, odds movement, rules, and settlement.
         </p>
