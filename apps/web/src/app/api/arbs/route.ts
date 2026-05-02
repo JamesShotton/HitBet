@@ -1,5 +1,6 @@
 import { pool } from "../../lib/db";
 import { auth } from "../../lib/auth";
+import { redis, ARBS_CACHE_KEY } from "../../lib/redis";
 
 function demoArbs2Way() {
   return [
@@ -130,14 +131,39 @@ export async function GET() {
       });
     }
 
+    // ── Try Redis cache first ──────────────────────────────────
+    try {
+      const cached = await redis.get<any[]>(ARBS_CACHE_KEY);
+      if (cached && Array.isArray(cached)) {
+        const arbs2way = cached.filter((a) => a.legs === 2).slice(0, 50);
+        const arbs3way = has3Way
+          ? cached.filter((a) => a.legs === 3).slice(0, 50)
+          : [];
+        return Response.json({
+          signedIn: true,
+          active: true,
+          demo: false,
+          plan,
+          trial: isTrialing && !isActive,
+          trialDaysLeft,
+          arbs2way,
+          arbs3way,
+          hasLongRun,
+        });
+      }
+    } catch (cacheErr) {
+      console.warn("[api/arbs] Redis read failed, falling back to DB:", cacheErr);
+    }
+
+    // ── Cache miss — query DB ──────────────────────────────────
     const result2 = await pool.query(
-      `select *, created_at from arbs where legs = 2 order by margin desc limit 50`
+      `SELECT * FROM arbs WHERE legs = 2 AND expires_at > NOW() ORDER BY margin DESC LIMIT 50`
     );
 
     let arbs3way: any[] = [];
     if (has3Way) {
       const result3 = await pool.query(
-        `select *, created_at from arbs where legs = 3 order by margin desc limit 50`
+        `SELECT * FROM arbs WHERE legs = 3 AND expires_at > NOW() ORDER BY margin DESC LIMIT 50`
       );
       arbs3way = result3.rows;
     }

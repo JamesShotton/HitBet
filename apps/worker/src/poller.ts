@@ -12,13 +12,15 @@ import { findValueBets } from "./valueEngine.js";
 //   Tier 2: 20 sports every 5min = 4/min
 //   Total: ~18/min = ~26,000/day = ~800,000/month  ✓ well within 5m
 
-const TIER1_INTERVAL = Number(process.env.TIER1_INTERVAL_SECONDS ?? 60); // hot sports
-const TIER2_INTERVAL = Number(process.env.TIER2_INTERVAL_SECONDS ?? 300); // everything else
+const TIER1_INTERVAL = Number(process.env.TIER1_INTERVAL_SECONDS ?? 60);
+const TIER2_INTERVAL = Number(process.env.TIER2_INTERVAL_SECONDS ?? 300);
 const MAX_ARBS = Number(process.env.MAX_ARBS_TO_SAVE ?? 500);
-const SPORTS_CACHE_TTL = 10 * 60 * 1000; // refresh sports list every 10 mins
+const SPORTS_CACHE_TTL = 10 * 60 * 1000;
+
+// Max consecutive failures before the process exits so the host can restart it
+const MAX_CONSECUTIVE_FAILURES = 10;
 
 // ─── Tier 1: high-liquidity, scan every 60s ───────────────────
-// These have the most bookmakers and most arb opportunities
 const TIER1_SPORTS = [
   "soccer_epl",
   "soccer_uefa_champs_league",
@@ -55,8 +57,8 @@ const TIER2_SPORTS = [
   "rugbyunion_six_nations",
   "cricket_international_t20",
   "cricket_ipl",
-  // US sports — scan with uk,eu,us regions for cross-market arbs
-  "basketball_nba", // duplicate intentional — also scanned tier1 but with us region adds FanDuel/DK
+  // US sports — duplicate intentional: us region adds FanDuel/DK cross-market arbs
+  "basketball_nba",
   "baseball_mlb",
   "icehockey_nhl",
   "americanfootball_nfl",
@@ -120,8 +122,6 @@ async function scanSports(
 }
 
 // ─── Arb store — merge tier results ──────────────────────────
-// We keep the last result per sport so tier 1 and tier 2 can
-// update independently without wiping each other's arbs
 const arbStore: Map<string, any[]> = new Map();
 
 function mergeAndSave(sportKey: string, arbs: any[]) {
@@ -138,13 +138,16 @@ async function flushToDb() {
   return best.length;
 }
 
+// ─── Failure tracking ─────────────────────────────────────────
+let tier1Failures = 0;
+let tier2Failures = 0;
+
 // ─── Tier 1 cycle — runs every 60s ───────────────────────────
 async function tier1Cycle() {
   const start = Date.now();
   try {
     const { arbs, events: allEvents } = await scanSports(TIER1_SPORTS);
 
-    // Group by sport and update store
     const bySport: Map<string, any[]> = new Map();
     for (const arb of arbs) {
       if (!bySport.has(arb.sport_key)) bySport.set(arb.sport_key, []);
@@ -157,17 +160,23 @@ async function tier1Cycle() {
     const saved = await flushToDb();
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
     console.log(`[tier1] done in ${elapsed}s — ${saved} arbs saved`);
-    // Send Telegram alerts for new high-value arbs
+
     await sendArbAlerts(arbs);
 
-    // Find and save value bets from already-fetched events
     const valueBets = findValueBets(allEvents);
     if (valueBets.length > 0) {
       await replaceValueBets(valueBets);
       console.log(`[tier1] saved ${valueBets.length} value bets`);
     }
+
+    tier1Failures = 0;
   } catch (err) {
-    console.error("[tier1] cycle failed", err);
+    tier1Failures++;
+    console.error(`[tier1] cycle failed (${tier1Failures}/${MAX_CONSECUTIVE_FAILURES})`, err);
+    if (tier1Failures >= MAX_CONSECUTIVE_FAILURES) {
+      console.error("[tier1] too many consecutive failures — exiting for restart");
+      process.exit(1);
+    }
   }
 }
 
@@ -189,8 +198,15 @@ async function tier2Cycle() {
     const saved = await flushToDb();
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
     console.log(`[tier2] done in ${elapsed}s — ${saved} arbs saved`);
+
+    tier2Failures = 0;
   } catch (err) {
-    console.error("[tier2] cycle failed", err);
+    tier2Failures++;
+    console.error(`[tier2] cycle failed (${tier2Failures}/${MAX_CONSECUTIVE_FAILURES})`, err);
+    if (tier2Failures >= MAX_CONSECUTIVE_FAILURES) {
+      console.error("[tier2] too many consecutive failures — exiting for restart");
+      process.exit(1);
+    }
   }
 }
 
@@ -212,12 +228,8 @@ export async function startPoller() {
   await tier1Cycle();
   await tier2Cycle();
 
-  // Schedule tier 1
   setInterval(tier1Cycle, TIER1_INTERVAL * 1000);
-
-  // Schedule tier 2
   setInterval(tier2Cycle, TIER2_INTERVAL * 1000);
 
-  // Props scanner on its own cadence
   startPropsScanner();
 }

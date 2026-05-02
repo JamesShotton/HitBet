@@ -1,5 +1,6 @@
 import { pool } from "../../lib/db";
 import { auth } from "../../lib/auth";
+import { redis, VALUE_CACHE_KEY } from "../../lib/redis";
 
 export async function GET() {
   try {
@@ -38,8 +39,25 @@ export async function GET() {
       });
     }
 
+    // ── Try Redis cache first ──────────────────────────────────
+    try {
+      const cached = await redis.get<any[]>(VALUE_CACHE_KEY);
+      if (cached && Array.isArray(cached)) {
+        return Response.json({
+          signedIn: true,
+          active: true,
+          isElite: true,
+          plan,
+          bets: cached.slice(0, 100),
+        });
+      }
+    } catch (cacheErr) {
+      console.warn("[api/value] Redis read failed, falling back to DB:", cacheErr);
+    }
+
+    // ── Cache miss — query DB ──────────────────────────────────
     const result = await pool.query(
-      `select * from value_bets order by ev_pct desc limit 100`
+      `SELECT * FROM value_bets WHERE expires_at > NOW() ORDER BY ev_pct DESC LIMIT 100`
     );
 
     return Response.json({
