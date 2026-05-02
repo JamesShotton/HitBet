@@ -63,9 +63,13 @@ export async function POST(req: Request) {
       },
     };
 
+    // Store ref_code in subscription metadata so recurring invoices can look it up
+    const subscriptionMeta = refCode ? { metadata: { ref_code: refCode, plan } } : { metadata: { plan } };
+
     // Add 7-day trial if requested and not already used
     if (isTrial && !alreadyTrialed) {
       checkoutParams.subscription_data = {
+        ...subscriptionMeta,
         trial_period_days: 7,
         trial_settings: {
           end_behavior: {
@@ -75,6 +79,8 @@ export async function POST(req: Request) {
       };
       // Require card upfront
       checkoutParams.payment_method_collection = "always";
+    } else {
+      checkoutParams.subscription_data = subscriptionMeta;
     }
 
     const checkout = await stripe.checkout.sessions.create(checkoutParams);

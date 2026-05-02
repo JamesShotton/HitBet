@@ -6,6 +6,62 @@ export const runtime = "nodejs";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+// ── Commission config (change here to update everywhere) ──────────────────────
+const FLAT_COMMISSION = 25.00;   // £25 per signup
+const RECURRING_RATE  = 0.10;   // 10% of each recurring payment
+
+async function recordAffiliateConversion({
+  refCode,
+  referredEmail,
+  plan,
+  saleAmount,
+  commission,
+  isTrial,
+  commissionType,
+  stripeSessionId,
+  stripeInvoiceId,
+  stripeSubscriptionId,
+}: {
+  refCode: string;
+  referredEmail: string;
+  plan: string;
+  saleAmount: number;
+  commission: number;
+  isTrial: boolean;
+  commissionType: "flat" | "recurring";
+  stripeSessionId?: string;
+  stripeInvoiceId?: string;
+  stripeSubscriptionId?: string;
+}) {
+  const affCheck = await pool.query(
+    `SELECT user_email FROM affiliates WHERE ref_code = $1`,
+    [refCode]
+  );
+  const affEmail = affCheck.rows[0]?.user_email;
+  // Don't pay self-referrals
+  if (!affEmail || affEmail === referredEmail) return;
+
+  await pool.query(
+    `INSERT INTO referral_conversions
+       (ref_code, referred_email, plan, sale_amount, commission, is_trial,
+        commission_type, stripe_session_id, stripe_invoice_id, stripe_subscription_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+     ON CONFLICT (stripe_session_id) DO NOTHING`,
+    [
+      refCode,
+      referredEmail,
+      plan,
+      saleAmount,
+      commission,
+      isTrial,
+      commissionType,
+      stripeSessionId ?? null,
+      stripeInvoiceId ?? null,
+      stripeSubscriptionId ?? null,
+    ]
+  );
+}
+
 export async function POST(req: Request) {
   const body = await req.text();
   const signature = (await headers()).get("stripe-signature");
@@ -27,7 +83,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    // ── Checkout completed (first time, includes trials) ──────────────────
+    // ── Checkout completed (first signup, includes trial starts) ──────────────
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
@@ -41,7 +97,6 @@ export async function POST(req: Request) {
       const isTrial = session.metadata?.is_trial === "true";
 
       if (email) {
-        // Fetch the subscription to get trial_end
         let trialExpiresAt: string | null = null;
 
         if (typeof session.subscription === "string") {
@@ -54,70 +109,90 @@ export async function POST(req: Request) {
         const status = isTrial ? "trialing" : "active";
 
         await pool.query(
-          `
-          insert into subscriptions (
-            user_email,
-            status,
-            plan,
-            stripe_customer_id,
-            stripe_subscription_id,
-            trial_expires_at,
-            updated_at
-          )
-          values ($1, $2, $3, $4, $5, $6, now())
-          on conflict (user_email)
-          do update set
-            status = excluded.status,
-            plan = excluded.plan,
-            stripe_customer_id = excluded.stripe_customer_id,
-            stripe_subscription_id = excluded.stripe_subscription_id,
-            trial_expires_at = coalesce(excluded.trial_expires_at, subscriptions.trial_expires_at),
-            updated_at = now()
-          `,
+          `INSERT INTO subscriptions
+             (user_email, status, plan, stripe_customer_id, stripe_subscription_id, trial_expires_at, updated_at)
+           VALUES ($1,$2,$3,$4,$5,$6,now())
+           ON CONFLICT (user_email) DO UPDATE SET
+             status = excluded.status,
+             plan = excluded.plan,
+             stripe_customer_id = excluded.stripe_customer_id,
+             stripe_subscription_id = excluded.stripe_subscription_id,
+             trial_expires_at = coalesce(excluded.trial_expires_at, subscriptions.trial_expires_at),
+             updated_at = now()`,
           [
             email,
             status,
             plan,
             typeof session.customer === "string" ? session.customer : null,
-            typeof session.subscription === "string"
-              ? session.subscription
-              : null,
+            typeof session.subscription === "string" ? session.subscription : null,
             trialExpiresAt,
           ]
         );
 
-        // ── Record affiliate conversion if ref_code present ────────────
+        // ── Flat £25 affiliate commission on every signup ──────────────────
         const refCode = session.metadata?.ref_code;
         if (refCode) {
-          const PLAN_AMOUNTS: Record<string, number> = {
-            arbitrage: 39.99,
-            longrun: 59.99,
-            both: 89.99,
-          };
-          const COMMISSION_RATE = 0.20;
-          const saleAmount = PLAN_AMOUNTS[plan] ?? 39.99;
-          const commission = Math.round(saleAmount * COMMISSION_RATE * 100) / 100;
-
-          // Verify the ref_code exists and isn't the purchaser's own code
-          const affCheck = await pool.query(
-            `SELECT user_email FROM affiliates WHERE ref_code = $1`,
-            [refCode]
-          );
-          const affEmail = affCheck.rows[0]?.user_email;
-          if (affEmail && affEmail !== email) {
-            await pool.query(
-              `INSERT INTO referral_conversions
-                 (ref_code, referred_email, plan, sale_amount, commission, is_trial, stripe_session_id)
-               VALUES ($1, $2, $3, $4, $5, $6, $7)
-               ON CONFLICT (stripe_session_id) DO NOTHING`,
-              [refCode, email, plan, saleAmount, commission, isTrial, session.id]
-            );
-          }
+          await recordAffiliateConversion({
+            refCode,
+            referredEmail: email,
+            plan,
+            saleAmount: FLAT_COMMISSION,
+            commission: FLAT_COMMISSION,
+            isTrial,
+            commissionType: "flat",
+            stripeSessionId: session.id,
+            stripeSubscriptionId:
+              typeof session.subscription === "string"
+                ? session.subscription
+                : undefined,
+          });
         }
       }
     }
 
-    // ── Subscription updated (trial → active, cancellations, etc) ─────────
+    // ── Recurring invoice paid — 10% commission on each billing cycle ─────────
+    if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object as Stripe.Invoice;
+
+      // Only subscription cycle payments (not first invoice — that's the checkout)
+      if (invoice.billing_reason !== "subscription_cycle") return new Response("ok", { status: 200 });
+      if (!invoice.subscription) return new Response("ok", { status: 200 });
+
+      const subscriptionId =
+        typeof invoice.subscription === "string"
+          ? invoice.subscription
+          : invoice.subscription.id;
+
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const refCode = subscription.metadata?.ref_code;
+      if (!refCode) return new Response("ok", { status: 200 });
+
+      const customerEmail =
+        invoice.customer_email ??
+        (typeof invoice.customer === "string"
+          ? (await stripe.customers.retrieve(invoice.customer) as Stripe.Customer).email
+          : null);
+
+      if (!customerEmail) return new Response("ok", { status: 200 });
+
+      const amountPaid = (invoice.amount_paid ?? 0) / 100;
+      const commission = Math.round(amountPaid * RECURRING_RATE * 100) / 100;
+      const plan = subscription.metadata?.plan ?? "unknown";
+
+      await recordAffiliateConversion({
+        refCode,
+        referredEmail: customerEmail,
+        plan,
+        saleAmount: amountPaid,
+        commission,
+        isTrial: false,
+        commissionType: "recurring",
+        stripeInvoiceId: invoice.id,
+        stripeSubscriptionId: subscriptionId,
+      });
+    }
+
+    // ── Subscription updated (trial → active, cancellations, etc) ─────────────
     if (event.type === "customer.subscription.updated") {
       const subscription = event.data.object as Stripe.Subscription;
 
@@ -126,33 +201,26 @@ export async function POST(req: Request) {
           ? subscription.status
           : "inactive";
 
-      // When trial converts to active, clear trial_expires_at
       const trialEnded =
         subscription.status === "active" && !subscription.trial_end;
 
       await pool.query(
-        `
-        update subscriptions
-        set
-          status = $1,
-          trial_expires_at = case when $2 then null else trial_expires_at end,
-          updated_at = now()
-        where stripe_subscription_id = $3
-        `,
+        `UPDATE subscriptions SET
+           status = $1,
+           trial_expires_at = CASE WHEN $2 THEN NULL ELSE trial_expires_at END,
+           updated_at = now()
+         WHERE stripe_subscription_id = $3`,
         [status, trialEnded, subscription.id]
       );
     }
 
-    // ── Subscription deleted (cancelled / payment failed) ─────────────────
+    // ── Subscription deleted (cancelled / payment failed) ─────────────────────
     if (event.type === "customer.subscription.deleted") {
       const subscription = event.data.object as Stripe.Subscription;
 
       await pool.query(
-        `
-        update subscriptions
-        set status = 'inactive', trial_expires_at = null, updated_at = now()
-        where stripe_subscription_id = $1
-        `,
+        `UPDATE subscriptions SET status = 'inactive', trial_expires_at = NULL, updated_at = now()
+         WHERE stripe_subscription_id = $1`,
         [subscription.id]
       );
     }
@@ -160,8 +228,6 @@ export async function POST(req: Request) {
     return new Response("ok", { status: 200 });
   } catch (err: any) {
     console.error("Stripe webhook handler failed:", err);
-    return new Response(`Webhook handler failed: ${err.message}`, {
-      status: 500,
-    });
+    return new Response(`Webhook handler failed: ${err.message}`, { status: 500 });
   }
 }

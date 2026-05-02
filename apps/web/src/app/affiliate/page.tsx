@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const COMMISSION_RATE = 0.2;
+const FLAT_COMMISSION = 25;
+const RECURRING_RATE = 0.10;
 const fmt = (v: number) => `£${v.toFixed(2)}`;
 
 type StatsData = {
@@ -125,8 +126,7 @@ export default function AffiliatePage() {
             Affiliate programme
           </h1>
           <p style={{ margin: "10px 0 0", opacity: 0.7, fontSize: 15 }}>
-            Earn <strong>{COMMISSION_RATE * 100}%</strong> commission on every
-            subscription you refer. Paid out manually on request.
+            <strong>£{FLAT_COMMISSION} per signup</strong> + <strong>{RECURRING_RATE * 100}%</strong> of every payment they make after that.
           </p>
         </div>
 
@@ -144,14 +144,19 @@ export default function AffiliatePage() {
               Join as an affiliate
             </div>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.65, marginBottom: 22 }}>
-              Share your unique link. When someone subscribes through it, you
-              earn 20% of their monthly subscription — indefinitely while they
-              stay subscribed.
+              Share your unique link. Every person who subscribes through it earns you{" "}
+              <strong style={{ color: "white" }}>£{FLAT_COMMISSION} upfront</strong>, plus{" "}
+              <strong style={{ color: "white" }}>{RECURRING_RATE * 100}% of every payment</strong> they make for as long as they stay subscribed.
             </p>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 20 }}>
-              <div>· Arbitrage (£39.99/mo) → <strong style={{ color: "white" }}>£8.00/mo</strong> per referral</div>
-              <div style={{ marginTop: 6 }}>· Long Run (£59.99/mo) → <strong style={{ color: "white" }}>£12.00/mo</strong> per referral</div>
-              <div style={{ marginTop: 6 }}>· Both (£89.99/mo) → <strong style={{ color: "white" }}>£18.00/mo</strong> per referral</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 20, display: "grid", gap: 8 }}>
+              <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div style={{ color: "white", fontWeight: 700, marginBottom: 2 }}>Any plan — £{FLAT_COMMISSION} flat on signup</div>
+                <div>Then 10% of each weekly payment (~£1–2/wk per referral)</div>
+              </div>
+              <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(0,255,140,0.04)", border: "1px solid rgba(0,255,140,0.12)" }}>
+                <div style={{ color: "#9be7bf", fontWeight: 700, marginBottom: 2 }}>Example: 10 referrals staying 3 months</div>
+                <div>£{FLAT_COMMISSION * 10} upfront + ~£{(9.99 * RECURRING_RATE * 13 * 10).toFixed(0)} recurring = <strong style={{ color: "white" }}>~£{(FLAT_COMMISSION * 10 + 9.99 * RECURRING_RATE * 13 * 10).toFixed(0)} total</strong></div>
+              </div>
             </div>
             <button
               onClick={register}
