@@ -73,7 +73,7 @@ const TESTIMONIALS = [
     plan: "Both Plans",
   },
   {
-    text: "Tried the 7-day trial with no intention of keeping it. Made enough in the first three days to cover the subscription for two months. Kept it. The step-by-step placement card is what makes it — I'd have made errors without it.",
+    text: "Tried the 24-hour trial not expecting much. Watched live arbs land in real time — it clicked immediately. Kept it. The step-by-step placement card is what makes it — I'd have made errors without it.",
     name: "Sarah W.",
     location: "Bristol",
     plan: "Arbitrage",
@@ -337,7 +337,7 @@ export default function Home() {
                   boxShadow: "0 8px 32px rgba(80,60,255,0.25)",
                 }}
               >
-                Try free for 7 days
+                Try free for 24 hours
               </Link>
               <Link
                 href="/dashboard"
@@ -361,7 +361,7 @@ export default function Home() {
 
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", display: "flex", gap: 16, flexWrap: "wrap" }}>
               <span>✓ Card required, £0 charged today</span>
-              <span>✓ Cancel before 7 days, pay nothing</span>
+              <span>✓ Cancel before 24 hours, pay nothing</span>
             </div>
           </div>
 
@@ -775,7 +775,7 @@ export default function Home() {
                   boxShadow: "0 8px 32px rgba(80,60,255,0.2)",
                 }}
               >
-                Start 7-day trial
+                Start 24-hour trial
               </Link>
             </div>
 
@@ -1107,7 +1107,7 @@ export default function Home() {
               Start free. Pay when it's working.
             </h2>
             <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.75, margin: 0 }}>
-              7-day free trial on every plan. No charge today. Cancels
+              24-hour free trial on every plan. No charge today. Cancels
               automatically if you don't continue.
             </p>
           </div>
@@ -1182,7 +1182,7 @@ export default function Home() {
                     textDecoration: "none",
                   }}
                 >
-                  Try free — 7 days
+                  Try free — 24 hours
                 </Link>
                 <div style={{ marginTop: 10, fontSize: 11, color: "rgba(255,255,255,0.28)", textAlign: "center" }}>
                   Then {p.price}/wk. Cancel anytime.
@@ -1277,7 +1277,7 @@ export default function Home() {
                 boxShadow: "0 8px 40px rgba(80,60,255,0.3)",
               }}
             >
-              Start 7-day free trial
+              Start 24-hour free trial
             </Link>
             <Link
               href="/dashboard"
@@ -1298,7 +1298,7 @@ export default function Home() {
             </Link>
           </div>
           <div style={{ marginTop: 18, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>
-            7-day trial · Card required · Cancels automatically if not continued
+            24-hour trial · Card required · Cancels automatically if not continued
           </div>
         </section>
 

@@ -72,7 +72,7 @@ export default function PricingPage() {
             Choose your plan
           </h1>
           <p style={{ margin: "10px 0 0", opacity: 0.8, fontSize: mob ? 15 : 16 }}>
-            Try free for 7 days. Card required — cancels automatically if you
+            Try free for 24 hours. Card required — cancels automatically if you
             don't continue.
           </p>
         </div>
@@ -229,10 +229,10 @@ export default function PricingPage() {
                 marginBottom: 4,
               }}
             >
-              £39.99
+              £9.99
             </div>
             <div style={{ fontSize: 12, opacity: 0.55, marginBottom: 18 }}>
-              /month
+              /week
             </div>
 
             <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 16 }} />
@@ -257,7 +257,7 @@ export default function PricingPage() {
               }}
               onClick={() => go("arbitrage", true)}
             >
-              Try free — 7 days
+              Try free — 24 hours
             </button>
             <button
               style={{
@@ -271,7 +271,7 @@ export default function PricingPage() {
               Subscribe now
             </button>
             <div style={{ marginTop: 8, fontSize: 11, opacity: 0.4 }}>
-              Then £39.99/mo. Cancel anytime.
+              Then £9.99/wk. Cancel anytime.
             </div>
           </div>
 
@@ -303,10 +303,10 @@ export default function PricingPage() {
                 marginBottom: 4,
               }}
             >
-              £59.99
+              £14.99
             </div>
             <div style={{ fontSize: 12, opacity: 0.55, marginBottom: 18 }}>
-              /month
+              /week
             </div>
 
             <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 16 }} />
@@ -331,7 +331,7 @@ export default function PricingPage() {
               }}
               onClick={() => go("longrun", true)}
             >
-              Try free — 7 days
+              Try free — 24 hours
             </button>
             <button
               style={{
@@ -345,7 +345,7 @@ export default function PricingPage() {
               Subscribe now
             </button>
             <div style={{ marginTop: 8, fontSize: 11, opacity: 0.4 }}>
-              Then £59.99/mo. Cancel anytime.
+              Then £14.99/wk. Cancel anytime.
             </div>
           </div>
 
@@ -385,11 +385,11 @@ export default function PricingPage() {
 
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
               <div style={{ fontSize: mob ? 38 : 42, fontWeight: 900, letterSpacing: -0.8, lineHeight: 1 }}>
-                £89.99
+                £19.99
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18 }}>
-              <div style={{ fontSize: 12, opacity: 0.55 }}>/month</div>
+              <div style={{ fontSize: 12, opacity: 0.55 }}>/week</div>
               <div
                 style={{
                   fontSize: 11, fontWeight: 700, padding: "2px 7px",
@@ -397,7 +397,7 @@ export default function PricingPage() {
                   border: "1px solid rgba(0,255,140,0.2)", color: "#9be7bf",
                 }}
               >
-                Save £10/mo
+                Save £5/wk
               </div>
             </div>
 
@@ -428,7 +428,7 @@ export default function PricingPage() {
               }}
               onClick={() => go("both", true)}
             >
-              Try free — 7 days
+              Try free — 24 hours
             </button>
             <button
               style={{
@@ -442,7 +442,7 @@ export default function PricingPage() {
               Subscribe now
             </button>
             <div style={{ marginTop: 8, fontSize: 11, opacity: 0.4 }}>
-              Then £89.99/mo. Cancel anytime.
+              Then £19.99/wk. Cancel anytime.
             </div>
           </div>
         </div>

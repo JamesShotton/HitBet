@@ -83,7 +83,7 @@ function CheckoutInner() {
                 color: "#9be7bf",
               }}
             >
-              7-day free trial
+              24-hour free trial
             </span>
           )}
         </p>
@@ -100,9 +100,9 @@ function CheckoutInner() {
               lineHeight: 1.6,
             }}
           >
-            Your card won't be charged today. After 7 days, you'll be billed £
-            {plan === "both" ? "89.99" : plan === "longrun" ? "59.99" : "39.99"}
-            /month automatically. Cancel anytime before the trial ends.
+            Your card won't be charged today. After 24 hours, you'll be billed £
+            {plan === "both" ? "19.99" : plan === "longrun" ? "14.99" : "9.99"}
+            /week automatically. Cancel anytime before the trial ends.
           </div>
         )}
         {err && (

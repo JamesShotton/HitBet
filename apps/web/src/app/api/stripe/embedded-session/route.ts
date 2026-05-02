@@ -70,7 +70,7 @@ export async function POST(req: Request) {
     if (isTrial && !alreadyTrialed) {
       checkoutParams.subscription_data = {
         ...subscriptionMeta,
-        trial_period_days: 7,
+        trial_period_days: 1,
         trial_settings: {
           end_behavior: {
             missing_payment_method: "cancel",
