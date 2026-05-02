@@ -19,6 +19,7 @@ function CheckoutInner() {
     | "longrun"
     | "both";
   const trial = searchParams.get("trial") === "true";
+  const ref = searchParams.get("ref") ?? "";
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -31,7 +32,7 @@ function CheckoutInner() {
         const res = await fetch("/api/stripe/embedded-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plan, trial }),
+          body: JSON.stringify({ plan, trial, ref_code: ref || undefined }),
         });
         const data = await res.json();
         if (!res.ok) {
@@ -48,7 +49,7 @@ function CheckoutInner() {
     return () => {
       cancelled = true;
     };
-  }, [plan, trial]);
+  }, [plan, trial, ref]);
 
   const options = useMemo(
     () => (clientSecret ? { clientSecret } : undefined),

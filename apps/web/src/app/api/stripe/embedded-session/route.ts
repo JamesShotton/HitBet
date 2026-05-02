@@ -21,6 +21,7 @@ export async function POST(req: Request) {
       ? rawPlan
       : "arbitrage";
     const isTrial = body?.trial === true;
+    const refCode = typeof body?.ref_code === "string" ? body.ref_code.slice(0, 20) : null;
 
     const priceId =
       plan === "both"
@@ -58,6 +59,7 @@ export async function POST(req: Request) {
         user_email: session.user.email,
         plan,
         is_trial: isTrial && !alreadyTrialed ? "true" : "false",
+        ...(refCode ? { ref_code: refCode } : {}),
       },
     };
 

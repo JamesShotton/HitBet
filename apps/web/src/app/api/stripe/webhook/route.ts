@@ -85,6 +85,35 @@ export async function POST(req: Request) {
             trialExpiresAt,
           ]
         );
+
+        // ── Record affiliate conversion if ref_code present ────────────
+        const refCode = session.metadata?.ref_code;
+        if (refCode) {
+          const PLAN_AMOUNTS: Record<string, number> = {
+            arbitrage: 39.99,
+            longrun: 59.99,
+            both: 89.99,
+          };
+          const COMMISSION_RATE = 0.20;
+          const saleAmount = PLAN_AMOUNTS[plan] ?? 39.99;
+          const commission = Math.round(saleAmount * COMMISSION_RATE * 100) / 100;
+
+          // Verify the ref_code exists and isn't the purchaser's own code
+          const affCheck = await pool.query(
+            `SELECT user_email FROM affiliates WHERE ref_code = $1`,
+            [refCode]
+          );
+          const affEmail = affCheck.rows[0]?.user_email;
+          if (affEmail && affEmail !== email) {
+            await pool.query(
+              `INSERT INTO referral_conversions
+                 (ref_code, referred_email, plan, sale_amount, commission, is_trial, stripe_session_id)
+               VALUES ($1, $2, $3, $4, $5, $6, $7)
+               ON CONFLICT (stripe_session_id) DO NOTHING`,
+              [refCode, email, plan, saleAmount, commission, isTrial, session.id]
+            );
+          }
+        }
       }
     }
 

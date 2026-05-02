@@ -30,8 +30,24 @@ export default function PricingPage() {
   const router = useRouter();
   const mob = useIsMobile();
 
+  // Capture referral code from URL and persist to localStorage
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      try { localStorage.setItem("hitbet_ref", ref); } catch {}
+      fetch("/api/affiliate/click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ref_code: ref }),
+      }).catch(() => {});
+    }
+  }, []);
+
   function go(plan: "arbitrage" | "longrun" | "both", trial = false) {
-    router.push(`/checkout?plan=${plan}${trial ? "&trial=true" : ""}`);
+    let ref = "";
+    try { ref = localStorage.getItem("hitbet_ref") ?? ""; } catch {}
+    router.push(`/checkout?plan=${plan}${trial ? "&trial=true" : ""}${ref ? `&ref=${encodeURIComponent(ref)}` : ""}`);
   }
 
   return (

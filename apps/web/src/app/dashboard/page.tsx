@@ -187,7 +187,208 @@ const MARKET_CATEGORIES = [
   { key: "props", label: "Player Props" },
 ];
 
-function ExpandedRow({ arb, stake }: { arb: Arb; stake: number }) {
+function BetLogModal({
+  arb,
+  profit,
+  onClose,
+  onSaved,
+}: {
+  arb: Arb;
+  profit: number;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await fetch("/api/bets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: arb.event,
+          market_group: arb.market_group,
+          leg1_book: arb.leg1_book,
+          leg2_book: arb.leg2_book,
+          leg3_book: arb.leg3_book ?? null,
+          stake: arb.total_stake ?? null,
+          profit,
+          notes: notes.trim() || null,
+        }),
+      });
+      setDone(true);
+      setTimeout(onSaved, 1200);
+    } catch {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 300,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(0,0,0,0.75)",
+          backdropFilter: "blur(4px)",
+        }}
+        onClick={onClose}
+      />
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: 420,
+          background: "rgba(10,14,22,0.98)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 22,
+          padding: "24px 22px",
+          boxShadow: "0 30px 80px rgba(0,0,0,0.6)",
+        }}
+      >
+        {done ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "24px 0",
+              fontSize: 18,
+              fontWeight: 800,
+              color: "#9be7bf",
+            }}
+          >
+            ✅ Bet logged!
+          </div>
+        ) : (
+          <>
+            <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>
+              Log this bet
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                color: "rgba(255,255,255,0.5)",
+                marginBottom: 18,
+              }}
+            >
+              {arb.event}
+            </div>
+            <div
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                background: "rgba(0,255,140,0.06)",
+                border: "1px solid rgba(0,255,140,0.18)",
+                marginBottom: 18,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "rgba(255,255,255,0.4)",
+                  marginBottom: 4,
+                }}
+              >
+                Guaranteed profit
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 900, color: "#9be7bf" }}>
+                +{fmt(profit)}
+              </div>
+            </div>
+            <div style={{ marginBottom: 18 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "rgba(255,255,255,0.4)",
+                  marginBottom: 6,
+                }}
+              >
+                Notes (optional)
+              </div>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. stakes placed, any issues..."
+                rows={2}
+                style={{
+                  width: "100%",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.09)",
+                  borderRadius: 10,
+                  color: "white",
+                  padding: "10px 12px",
+                  fontSize: 13,
+                  resize: "none",
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={onClose}
+                style={{
+                  flex: 1,
+                  padding: "11px 14px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "transparent",
+                  color: "rgba(255,255,255,0.6)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={save}
+                disabled={saving}
+                style={{
+                  flex: 2,
+                  padding: "11px 14px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(120,110,255,0.45)",
+                  background:
+                    "linear-gradient(90deg, rgba(120,110,255,0.95), rgba(0,190,255,0.75))",
+                  color: "white",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  opacity: saving ? 0.6 : 1,
+                }}
+              >
+                {saving ? "Saving…" : "Log bet"}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ExpandedRow({
+  arb,
+  stake,
+  onLogBet,
+}: {
+  arb: Arb;
+  stake: number;
+  onLogBet: (profit: number) => void;
+}) {
   const scale = stake / (Number(arb.total_stake ?? 50) || 50);
   const s1 = Number(arb.leg1_stake) * scale;
   const s2 = Number(arb.leg2_stake) * scale;
@@ -606,14 +807,34 @@ function ExpandedRow({ arb, stake }: { arb: Arb; stake: number }) {
             borderRadius: 12,
             background: "rgba(0,255,140,0.08)",
             border: "1px solid rgba(0,255,140,0.2)",
-            fontSize: 14,
-            color: "#9be7bf",
-            fontWeight: 700,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
           }}
         >
-          ✅ All legs placed — you're locked in for{" "}
-          <strong>+{fmt(profit)}</strong> guaranteed profit regardless of the
-          result.
+          <div style={{ fontSize: 14, color: "#9be7bf", fontWeight: 700 }}>
+            ✅ All legs placed — you're locked in for{" "}
+            <strong>+{fmt(profit)}</strong> guaranteed profit regardless of the
+            result.
+          </div>
+          <button
+            onClick={() => onLogBet(profit)}
+            style={{
+              padding: "8px 14px",
+              borderRadius: 10,
+              border: "1px solid rgba(0,255,140,0.35)",
+              background: "rgba(0,255,140,0.1)",
+              color: "#9be7bf",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            + Log this bet
+          </button>
         </div>
       )}
     </div>
@@ -636,6 +857,7 @@ function ArbRow({
   mob: boolean;
   pinned: boolean;
   onPin: () => void;
+  onLogBet: (arb: Arb, profit: number) => void;
 }) {
   const mPct = Number(arb.margin) * 100;
   const scale = stake / (Number(arb.total_stake ?? 50) || 50);
@@ -785,7 +1007,7 @@ function ArbRow({
         {expanded && (
           <tr style={{ background: "rgba(120,110,255,0.03)" }}>
             <td colSpan={2} style={{ padding: "0 12px 12px" }}>
-              <ExpandedRow arb={arb} stake={stake} />
+              <ExpandedRow arb={arb} stake={stake} onLogBet={(p) => onLogBet(arb, p)} />
             </td>
           </tr>
         )}
@@ -978,7 +1200,7 @@ function ArbRow({
       {expanded && (
         <tr style={{ background: "rgba(120,110,255,0.03)" }}>
           <td colSpan={7} style={{ padding: "0 14px 14px" }}>
-            <ExpandedRow arb={arb} stake={stake} />
+            <ExpandedRow arb={arb} stake={stake} onLogBet={(p) => onLogBet(arb, p)} />
           </td>
         </tr>
       )}
@@ -1016,6 +1238,8 @@ export default function DashboardPage() {
   // null = not yet configured (show all arbs until they set up)
   const [myBooks, setMyBooks] = useState<Set<string> | null>(null);
   const [booksConfigured, setBooksConfigured] = useState(false);
+  const [betLogTarget, setBetLogTarget] = useState<{ arb: Arb; profit: number } | null>(null);
+  const [monthPnl, setMonthPnl] = useState<number | null>(null);
 
   useEffect(() => {
     try {
@@ -1023,6 +1247,23 @@ export default function DashboardPage() {
       if (saved !== null) {
         setMyBooks(new Set(JSON.parse(saved)));
         setBooksConfigured(true);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("hitbet_stake");
+      if (saved !== null) setStakeInput(saved);
+    } catch {}
+  }, []);
+
+  const loadPnl = useCallback(async () => {
+    try {
+      const res = await fetch("/api/bets?summary=true");
+      if (res.ok) {
+        const d = await res.json();
+        if (typeof d.monthPnl === "number") setMonthPnl(d.monthPnl);
       }
     } catch {}
   }, []);
@@ -1104,6 +1345,10 @@ export default function DashboardPage() {
     const t = setInterval(load, 30000);
     return () => clearInterval(t);
   }, [load, mob]);
+
+  useEffect(() => {
+    if (signedIn) loadPnl();
+  }, [signedIn, loadPnl]);
 
   const stake = Math.max(1, Number(stakeInput) || 50);
   const isElite = (plan === "longrun" || plan === "both") && active;
@@ -1269,7 +1514,10 @@ export default function DashboardPage() {
             min="1"
             step="1"
             value={stakeInput}
-            onChange={(e) => setStakeInput(e.target.value)}
+            onChange={(e) => {
+              setStakeInput(e.target.value);
+              try { localStorage.setItem("hitbet_stake", e.target.value); } catch {}
+            }}
             style={{
               background: "transparent",
               border: "none",
@@ -1504,6 +1752,15 @@ export default function DashboardPage() {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
+      {betLogTarget && (
+        <BetLogModal
+          arb={betLogTarget.arb}
+          profit={betLogTarget.profit}
+          onClose={() => setBetLogTarget(null)}
+          onSaved={() => { setBetLogTarget(null); loadPnl(); }}
+        />
+      )}
+
       {/* ── My Books Modal ── */}
       {booksModalOpen && (
         <div
@@ -2306,17 +2563,13 @@ export default function DashboardPage() {
               v: active ? `+${fmt(stats.bestProfit)}` : "—",
             },
             {
-              l: "Plan",
+              l: "Month P&L",
               v:
-                plan === "longrun"
-                  ? "Long Run"
-                  : plan === "arbitrage"
-                  ? "Arbitrage"
-                  : plan
-                  ? plan[0].toUpperCase() + plan.slice(1)
-                  : signedIn
-                  ? "None"
-                  : "Guest",
+                monthPnl !== null
+                  ? monthPnl >= 0
+                    ? `+${fmt(monthPnl)}`
+                    : `-${fmt(Math.abs(monthPnl))}`
+                  : "—",
             },
           ].map(({ l, v }) => (
             <div
@@ -2379,7 +2632,10 @@ export default function DashboardPage() {
               min="1"
               step="1"
               value={stakeInput}
-              onChange={(e) => setStakeInput(e.target.value)}
+              onChange={(e) => {
+              setStakeInput(e.target.value);
+              try { localStorage.setItem("hitbet_stake", e.target.value); } catch {}
+            }}
               style={{
                 background: "transparent",
                 border: "none",
@@ -2575,6 +2831,7 @@ export default function DashboardPage() {
                       mob={mob}
                       pinned={pinnedIds.has(a.id ?? i)}
                       onPin={() => togglePin(a.id ?? i)}
+                      onLogBet={(logArb, profit) => setBetLogTarget({ arb: logArb, profit })}
                     />
                   ))}
                 </tbody>
