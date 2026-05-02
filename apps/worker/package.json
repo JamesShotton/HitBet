@@ -8,7 +8,6 @@
     "dev": "tsx src/index.ts"
   },
   "dependencies": {
-    "@arb/core": "*",
     "@upstash/redis": "^1.34.9",
     "pg": "^8.12.0"
   },
