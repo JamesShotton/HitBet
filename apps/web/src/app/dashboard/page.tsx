@@ -849,6 +849,7 @@ function ArbRow({
   mob,
   pinned,
   onPin,
+  onLogBet,
 }: {
   arb: Arb;
   stake: number;
