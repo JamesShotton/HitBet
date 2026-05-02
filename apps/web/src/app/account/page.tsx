@@ -247,7 +247,7 @@ export default function AccountPage() {
                 },
                 {
                   label: "3-way football arbs (1X2)",
-                  included: info?.plan === "longrun",
+                  included: info?.plan === "longrun" || info?.plan === "both",
                 },
                 {
                   label: "Telegram alerts",
@@ -359,7 +359,7 @@ export default function AccountPage() {
         )}
 
         {/* Cross-sell: longrun user missing arbitrage */}
-        {hasAccess && (info?.plan === "longrun" || info?.plan === "both") && (
+        {hasAccess && info?.plan === "longrun" && (
           <div style={s.upgradeCard}>
             <div>
               <div style={s.upgradeTitle}>Add Arbitrage — £39.99/mo</div>
