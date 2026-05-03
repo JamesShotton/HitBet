@@ -3,8 +3,6 @@ import { ArbRow } from "./db.js";
 
 const TOTAL_STAKE = Number(process.env.TOTAL_STAKE ?? 50);
 
-// Minimum arb margin to show — filters out phantom arbs that vanish before placement
-const MIN_MARGIN = Number(process.env.MIN_ARB_MARGIN ?? 0.003); // 0.3%
 
 // UK-licensed bookmakers only. Excludes EU/offshore books UK users can't access
 // (Bwin, Betclic, Marathon Bet, Pinnacle, FanDuel, DraftKings, Tipico, etc.)
@@ -118,7 +116,7 @@ function h2h2(event: OddsEvent, marketKey = "h2h"): ArbRow | null {
   const { odds: o2, book: b2 } = best[n2];
   if (b1 === b2) return null;
   const m = margin2(o1, o2);
-  if (m < MIN_MARGIN) return null;
+  if (m <= 0) return null;
   const { sA, sB } = split2(o1, o2);
   return {
     event: `${event.home_team} vs ${event.away_team}`,
@@ -149,7 +147,7 @@ function h2h3(event: OddsEvent, marketKey = "h2h"): ArbRow | null {
   const { odds: oD, book: bD } = best[drawKey];
   const { odds: oA, book: bA } = best[awayKey];
   const m = margin3(oH, oD, oA);
-  if (m < MIN_MARGIN) return null;
+  if (m <= 0) return null;
   const { sA: sH, sB: sD, sC: sAway } = split3(oH, oD, oA);
   return {
     event: `${event.home_team} vs ${event.away_team}`,
@@ -193,7 +191,7 @@ function spreads(event: OddsEvent, marketKey = "spreads"): ArbRow[] {
       for (const p of poss) {
         if (n.book === p.book) continue;
         const m = margin2(n.odds, p.odds);
-        if (m < MIN_MARGIN) continue;
+        if (m <= 0) continue;
         const { sA, sB } = split2(n.odds, p.odds);
         arbs.push({
           event: `${event.home_team} vs ${event.away_team}`,
