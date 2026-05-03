@@ -1287,6 +1287,105 @@ function ArbRow({
   );
 }
 
+const TUTORIAL_STEPS = [
+  {
+    icon: "🎯",
+    title: "What is arbitrage?",
+    body: "An arb is when two bookmakers disagree on the odds of the same event. By placing a bet on both sides, the maths guarantees you profit — regardless of who wins.",
+  },
+  {
+    icon: "📋",
+    title: "Reading the execution card",
+    body: "Tap any arb to expand it. You'll see exactly which book, which selection, how much to stake, and the minimum odds to accept. Follow each step in order — place both legs before the odds move.",
+  },
+  {
+    icon: "🔒",
+    title: "Bookmaker risk ratings",
+    body: (
+      <div style={{ display: "grid", gap: 8 }}>
+        {[
+          { badge: "Exchange", color: "#6ee7b7", bg: "rgba(0,200,120,0.12)", border: "rgba(0,200,120,0.25)", desc: "Betfair, Smarkets, Matchbook — betting exchanges never restrict winning customers. Always the safest leg." },
+          { badge: null, label: "No badge", color: "rgba(255,255,255,0.5)", bg: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.1)", desc: "Major UK high-street books (Bet365, William Hill, Ladbrokes etc.) — well regulated, familiar to dispute." },
+          { badge: "Check odds", color: "#fbbf24", bg: "rgba(251,191,36,0.1)", border: "rgba(251,191,36,0.2)", desc: "Smaller or EU-licensed books — fully accessible but may restrict profitable accounts faster. Keep stakes sensible." },
+          { badge: "Verify", color: "#f97316", bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.2)", desc: "EU books — confirm you can hold an account from the UK before placing a leg here." },
+        ].map((r) => (
+          <div key={r.desc} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 999, color: r.color, background: r.bg, border: `1px solid ${r.border}`, whiteSpace: "nowrap", marginTop: 2, flexShrink: 0 }}>
+              {r.badge ?? r.label}
+            </span>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>{r.desc}</span>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    icon: "⚡",
+    title: "Speed matters",
+    body: "Arbs are live odds mismatches — they close fast. Once you spot one, place both legs within a few minutes. The execution card tells you the minimum odds to accept, so if a leg has moved too far, skip that arb and wait for the next.",
+  },
+];
+
+function TutorialModal({ onClose }: { onClose: (dontShow: boolean) => void }) {
+  const [step, setStep] = useState(0);
+  const [dontShow, setDontShow] = useState(false);
+  const current = TUTORIAL_STEPS[step];
+  const isLast = step === TUTORIAL_STEPS.length - 1;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }} onClick={() => onClose(dontShow)} />
+      <div style={{
+        position: "relative", width: "100%", maxWidth: 480,
+        background: "rgba(10,14,22,0.98)",
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: 24,
+        boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(120,110,255,0.15)",
+        overflow: "hidden",
+      }}>
+        {/* Progress dots */}
+        <div style={{ display: "flex", gap: 5, padding: "18px 22px 0", justifyContent: "center" }}>
+          {TUTORIAL_STEPS.map((_, i) => (
+            <div key={i} style={{ width: i === step ? 20 : 6, height: 6, borderRadius: 999, transition: "all 0.3s", background: i === step ? "linear-gradient(90deg,rgba(120,110,255,1),rgba(0,190,255,1))" : "rgba(255,255,255,0.15)" }} />
+          ))}
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: "20px 26px 0" }}>
+          <div style={{ fontSize: 36, marginBottom: 10 }}>{current.icon}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "white", marginBottom: 10, letterSpacing: -0.3 }}>{current.title}</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.65 }}>
+            {typeof current.body === "string" ? current.body : current.body}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "20px 26px 22px", display: "flex", flexDirection: "column" as const, gap: 14, marginTop: 8 }}>
+          <div style={{ display: "flex", gap: 8 }}>
+            {step > 0 && (
+              <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                Back
+              </button>
+            )}
+            <button
+              onClick={() => isLast ? onClose(dontShow) : setStep(s => s + 1)}
+              style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid rgba(120,110,255,0.45)", background: "linear-gradient(90deg,rgba(120,110,255,0.95),rgba(0,190,255,0.75))", color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer" }}
+            >
+              {isLast ? "Got it, let's go →" : "Next →"}
+            </button>
+          </div>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", alignSelf: "center" as const }}>
+            <span style={{ width: 16, height: 16, borderRadius: 4, border: dontShow ? "none" : "1px solid rgba(255,255,255,0.25)", background: dontShow ? "#9be7bf" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#05060a", fontWeight: 900, flexShrink: 0 }} onClick={() => setDontShow(v => !v)}>
+              {dontShow ? "✓" : ""}
+            </span>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }} onClick={() => setDontShow(v => !v)}>Don't show this again</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const mob = useIsMobile();
   const [arbs2, setArbs2] = useState<Arb[]>([]);
@@ -1319,6 +1418,7 @@ export default function DashboardPage() {
   const [booksConfigured, setBooksConfigured] = useState(false);
   const [betLogTarget, setBetLogTarget] = useState<{ arb: Arb; profit: number } | null>(null);
   const [monthPnl, setMonthPnl] = useState<number | null>(null);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -1326,6 +1426,14 @@ export default function DashboardPage() {
       if (saved !== null) {
         setMyBooks(new Set(JSON.parse(saved)));
         setBooksConfigured(true);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("hitbet_tutorial_done") !== "true") {
+        setTutorialOpen(true);
       }
     } catch {}
   }, []);
@@ -1837,6 +1945,18 @@ export default function DashboardPage() {
           profit={betLogTarget.profit}
           onClose={() => setBetLogTarget(null)}
           onSaved={() => { setBetLogTarget(null); loadPnl(); }}
+        />
+      )}
+
+      {/* ── Tutorial Modal ── */}
+      {tutorialOpen && (
+        <TutorialModal
+          onClose={(dontShow) => {
+            setTutorialOpen(false);
+            if (dontShow) {
+              try { localStorage.setItem("hitbet_tutorial_done", "true"); } catch {}
+            }
+          }}
         />
       )}
 
