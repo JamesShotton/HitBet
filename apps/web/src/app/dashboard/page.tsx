@@ -178,6 +178,88 @@ const UK_BOOKS: { group: string; books: string[] }[] = [
 
 const ALL_UK_BOOKS = UK_BOOKS.flatMap((g) => g.books);
 
+type RiskLevel = "exchange" | "mainstream" | "standard" | "caution";
+
+const BOOK_RISK: Record<string, RiskLevel> = {
+  // Exchanges — never restrict winning customers
+  "Betfair Exchange": "exchange",
+  "Betfair":          "exchange",
+  "Smarkets":         "exchange",
+  "Matchbook":        "exchange",
+  "Betdaq":           "exchange",
+  // Major UK high-street books — slow to restrict, easy disputes
+  "Bet365":           "mainstream",
+  "William Hill":     "mainstream",
+  "Coral":            "mainstream",
+  "Ladbrokes":        "mainstream",
+  "Paddy Power":      "mainstream",
+  "Sky Bet":          "mainstream",
+  "Betway":           "mainstream",
+  "Unibet (UK)":      "mainstream",
+  "888sport":         "mainstream",
+  "BetVictor":        "mainstream",
+  "BoyleSports":      "mainstream",
+  "Betfred":          "mainstream",
+  "Grosvenor":        "mainstream",
+  "SportNation":      "mainstream",
+  "BetUK":            "mainstream",
+  // Smaller UK-licensed or EU books — accessible but may restrict faster
+  "Casumo":           "standard",
+  "LeoVegas":         "standard",
+  "Mr Green":         "standard",
+  "Virgin Bet":       "standard",
+  "QuinnBet":         "standard",
+  "Midnite":          "standard",
+  "Rhino.bet":        "standard",
+  "Spreadex":         "standard",
+  "10Bet":            "standard",
+  "NetBet":           "standard",
+  "Pinnacle":         "standard",
+  "Unibet":           "standard",
+  // EU/international books — verify you can hold an account before placing
+  "Bwin":             "caution",
+  "Marathon Bet":     "caution",
+  "Tipico":           "caution",
+  "Betclic":          "caution",
+  "NordicBet":        "caution",
+};
+
+const RISK_META: Record<RiskLevel, { label: string; color: string; bg: string; border: string; tip: string }> = {
+  exchange:   { label: "Exchange",   color: "#6ee7b7", bg: "rgba(0,200,120,0.12)", border: "rgba(0,200,120,0.25)", tip: "Betting exchange — never restricts winning accounts" },
+  mainstream: { label: "",           color: "",        bg: "",                     border: "",                     tip: "Major UK-licensed bookmaker" },
+  standard:   { label: "Check odds", color: "#fbbf24", bg: "rgba(251,191,36,0.1)", border: "rgba(251,191,36,0.2)", tip: "Smaller or EU-licensed book — may restrict profitable accounts faster" },
+  caution:    { label: "Verify",     color: "#f97316", bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.2)", tip: "EU book — confirm you can hold a UK account before placing" },
+};
+
+function BookBadge({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
+  const risk = BOOK_RISK[name] ?? "caution";
+  const meta = RISK_META[risk];
+  const fontSize = size === "sm" ? 12 : 13;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+      <span style={{ fontSize, fontWeight: 700, color: "white" }}>{name}</span>
+      {meta.label && (
+        <span
+          title={meta.tip}
+          style={{
+            fontSize: 9,
+            fontWeight: 800,
+            padding: "1px 5px",
+            borderRadius: 999,
+            color: meta.color,
+            background: meta.bg,
+            border: `1px solid ${meta.border}`,
+            letterSpacing: "0.05em",
+            cursor: "help",
+          }}
+        >
+          {meta.label}
+        </span>
+      )}
+    </span>
+  );
+}
+
 const MARKET_CATEGORIES = [
   { key: "all", label: "All markets" },
   { key: "moneyline", label: "Moneyline" },
@@ -627,11 +709,7 @@ function ExpandedRow({
                       flexWrap: "wrap" as const,
                     }}
                   >
-                    <span
-                      style={{ fontSize: 16, fontWeight: 900, color: "white" }}
-                    >
-                      {leg.book}
-                    </span>
+                    <BookBadge name={leg.book} />
                     <span
                       style={{
                         fontSize: 11,
@@ -927,8 +1005,8 @@ function ArbRow({
                 marginBottom: 2,
               }}
             >
-              {arb.leg1_book} @ {Number(arb.leg1_odds).toFixed(2)} ·{" "}
-              {arb.leg2_book} @ {Number(arb.leg2_odds).toFixed(2)}
+              <BookBadge name={arb.leg1_book} size="sm" /> @ {Number(arb.leg1_odds).toFixed(2)} ·{" "}
+              <BookBadge name={arb.leg2_book} size="sm" /> @ {Number(arb.leg2_odds).toFixed(2)}
             </div>
           </td>
           <td
@@ -1090,7 +1168,7 @@ function ArbRow({
               marginBottom: 2,
             }}
           >
-            {arb.leg1_book}{" "}
+            <BookBadge name={arb.leg1_book} />{" "}
             <span style={{ color: "#98b8ff" }}>
               @ {Number(arb.leg1_odds).toFixed(2)}
             </span>
@@ -1108,7 +1186,7 @@ function ArbRow({
               marginBottom: 2,
             }}
           >
-            {arb.leg2_book}{" "}
+            <BookBadge name={arb.leg2_book} />{" "}
             <span style={{ color: "#98b8ff" }}>
               @ {Number(arb.leg2_odds).toFixed(2)}
             </span>
@@ -1126,7 +1204,7 @@ function ArbRow({
                   marginTop: 4,
                 }}
               >
-                {arb.leg3_book}{" "}
+                <BookBadge name={arb.leg3_book!} />{" "}
                 <span style={{ color: "#98b8ff" }}>
                   @ {Number(arb.leg3_odds).toFixed(2)}
                 </span>
