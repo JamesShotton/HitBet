@@ -222,7 +222,7 @@ function ValueCard({ bet }: { bet: ValueBet }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function ValuePage() {
+export default function LongRunPage() {
   const mob = useIsMobile();
   const [bets, setBets] = useState<ValueBet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -237,7 +237,7 @@ export default function ValuePage() {
 
   useEffect(() => {
     try {
-      if (localStorage.getItem("hitbet_value_tutorial_done") !== "true") {
+      if (localStorage.getItem("hitbet_longrun_tutorial_done") !== "true") {
         setTutorialOpen(true);
       }
     } catch {}
@@ -246,7 +246,7 @@ export default function ValuePage() {
   const load = useCallback(async () => {
     try {
       setError("");
-      const res = await fetch("/api/value", { cache: "no-store" });
+      const res = await fetch("/api/long-run", { cache: "no-store" });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to load");
       setBets(Array.isArray(data.bets) ? data.bets : []);
@@ -298,7 +298,7 @@ export default function ValuePage() {
             onClose={(dontShow) => {
               setTutorialOpen(false);
               if (dontShow) {
-                try { localStorage.setItem("hitbet_value_tutorial_done", "true"); } catch {}
+                try { localStorage.setItem("hitbet_longrun_tutorial_done", "true"); } catch {}
               }
             }}
           />
@@ -309,7 +309,7 @@ export default function ValuePage() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
               <h1 style={{ fontSize: mob ? 26 : 34, fontWeight: 900, letterSpacing: "-0.03em", margin: 0, color: "white" }}>
-                Value Watchlist
+                Long Run
               </h1>
               <button
                 onClick={() => setTutorialOpen(true)}

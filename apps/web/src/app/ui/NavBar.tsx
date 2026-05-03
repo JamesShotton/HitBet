@@ -26,11 +26,11 @@ export default function NavBar() {
         <Link className="navLink" href="/dashboard">
           Dashboard
         </Link>
+        <Link className="navLink" href="/long-run">
+          Long Run
+        </Link>
         <Link className="navLink" href="/guide">
           Guide
-        </Link>
-        <Link className="navLink" href="/value">
-          Value
         </Link>
         <Link className="navLink" href="/pricing">
           Plans
@@ -64,17 +64,17 @@ export default function NavBar() {
           </Link>
           <Link
             className="mobileLink"
+            href="/long-run"
+            onClick={() => setOpen(false)}
+          >
+            Long Run
+          </Link>
+          <Link
+            className="mobileLink"
             href="/guide"
             onClick={() => setOpen(false)}
           >
             Guide
-          </Link>
-          <Link
-            className="mobileLink"
-            href="/value"
-            onClick={() => setOpen(false)}
-          >
-            Value
           </Link>
           <Link
             className="mobileLink"

@@ -313,7 +313,7 @@ export default function PricingPage() {
 
             <ul style={{ margin: "0 0 20px", paddingLeft: 18, display: "grid", gap: 9, flex: 1 }}>
               {[
-                "Value watchlist (positive EV bets)",
+                "Long Run watchlist (positive EV bets)",
                 "3-way football arbs (1X2)",
                 "Telegram alerts",
                 "Kelly criterion stakes",
@@ -409,7 +409,7 @@ export default function PricingPage() {
             <ul style={{ margin: "0 0 20px", paddingLeft: 18, display: "grid", gap: 9, flex: 1 }}>
               {[
                 "Full 2-way arb feed",
-                "Value watchlist + EV bets",
+                "Long Run watchlist + EV bets",
                 "3-way football arbs",
                 "Telegram alerts",
                 "Step-by-step placement",

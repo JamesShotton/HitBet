@@ -118,7 +118,7 @@ const PLANS = [
     price: "£14.99",
     plan: "longrun",
     sub: "Mathematical edge over time",
-    features: ["Value watchlist (positive EV)", "3-way football arbs (1X2)", "Telegram alerts", "Kelly criterion stakes", "Exchange price comparison"],
+    features: ["Long Run watchlist (positive EV)", "3-way football arbs (1X2)", "Telegram alerts", "Kelly criterion stakes", "Exchange price comparison"],
     popular: false,
   },
   {
@@ -126,7 +126,7 @@ const PLANS = [
     price: "£19.99",
     plan: "both",
     sub: "Complete edge toolkit",
-    features: ["Full 2-way arb feed", "Value watchlist + EV bets", "3-way football arbs", "Telegram alerts", "Step-by-step placement", "Kelly criterion stakes"],
+    features: ["Full 2-way arb feed", "Long Run watchlist + EV bets", "3-way football arbs", "Telegram alerts", "Step-by-step placement", "Kelly criterion stakes"],
     popular: true,
     saving: "Save £5/wk",
   },

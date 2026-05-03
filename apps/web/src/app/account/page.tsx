@@ -254,7 +254,7 @@ export default function AccountPage() {
                   included: info?.plan === "longrun" || info?.plan === "both",
                 },
                 {
-                  label: "Value watchlist",
+                  label: "Long Run watchlist",
                   included: info?.plan === "longrun" || info?.plan === "both",
                 },
               ].map(({ label, included }) => (
