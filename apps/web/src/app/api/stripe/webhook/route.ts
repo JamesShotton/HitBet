@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 // ── Commission config (change here to update everywhere) ──────────────────────
-const FLAT_COMMISSION = 25.00;   // £25 per signup
+const FLAT_COMMISSION = 15.00;   // £15 per signup
 const RECURRING_RATE  = 0.10;   // 10% of each recurring payment
 
 async function recordAffiliateConversion({
