@@ -26,5 +26,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "always",
       priority: 0.7,
     },
+    {
+      url: "https://hitbet.to/long-run",
+      lastModified: new Date(),
+      changeFrequency: "always",
+      priority: 0.7,
+    },
   ];
 }

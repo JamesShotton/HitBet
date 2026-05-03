@@ -419,6 +419,21 @@ export default function Home() {
   const sec  = { padding: mob ? "64px 0" : "112px 0" };
 
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQS.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          }),
+        }}
+      />
     <div className="narrowPage">
       <div style={{ width: "100%" }}>
 
@@ -1419,6 +1434,7 @@ export default function Home() {
 
       </div>
     </div>
+    </>
   );
 }
 

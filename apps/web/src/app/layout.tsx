@@ -7,43 +7,34 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata = {
-  title: "HitBet — Live Arbitrage Betting Feed | Guaranteed Profit",
+  title: {
+    default: "HitBet — Live Arbitrage Betting | Guaranteed Profit on Every Bet",
+    template: "%s | HitBet",
+  },
   description:
-    "HitBet scans 40+ UK sportsbooks every 30 seconds to find real arbitrage opportunities. Get exact stake splits, step-by-step placement cards and lock in guaranteed profit — no luck required.",
+    "HitBet scans 40+ UK sportsbooks every 30 seconds. Get exact stake splits, step-by-step placement cards and lock in guaranteed profit — no luck required. 24-hour free trial.",
   keywords:
-    "arbitrage betting, arb betting UK, sports arbitrage, guaranteed profit betting, arb finder, betting arbitrage tool, sure bet finder UK",
+    "arbitrage betting, arb betting UK, sports arbitrage, guaranteed profit betting, sure bet finder UK, arb finder, betting arbitrage tool, value betting UK",
   authors: [{ name: "HitBet" }],
   creator: "HitBet",
   publisher: "HitBet",
   metadataBase: new URL("https://hitbet.to"),
-  alternates: {
-    canonical: "https://hitbet.to",
-  },
   verification: {
     google: "cT44bn1rSLXFsXve5BMbHh-GpD_e8TOfc91mHLlS-50",
   },
   openGraph: {
     type: "website",
     url: "https://hitbet.to",
-    title: "HitBet — Live Arbitrage Betting Feed",
+    title: "HitBet — Live Arbitrage Betting | Guaranteed Profit on Every Bet",
     description:
-      "Scan 40+ sportsbooks in real time. Find guaranteed profit arbitrage opportunities with exact stake splits. Try free for 24 hours.",
+      "Scan 40+ UK sportsbooks in real time. Exact stake splits, step-by-step placement. Guaranteed profit, pure maths. Try free 24 hours.",
     siteName: "HitBet",
-    images: [
-      {
-        url: "https://hitbet.to/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "HitBet — Live Arbitrage Betting Feed",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "HitBet — Live Arbitrage Betting Feed",
+    title: "HitBet — Live Arbitrage Betting | Guaranteed Profit",
     description:
-      "Scan 40+ sportsbooks in real time. Guaranteed profit, pure maths.",
-    images: ["https://hitbet.to/og-image.png"],
+      "Scan 40+ sportsbooks in real time. Exact stake splits. Guaranteed profit, pure maths.",
   },
   robots: {
     index: true,
@@ -77,6 +68,32 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": "https://hitbet.to/#organization",
+                  name: "HitBet",
+                  url: "https://hitbet.to",
+                  logo: "https://hitbet.to/icon-192.png",
+                  description:
+                    "Live arbitrage betting feed scanning 40+ UK sportsbooks for guaranteed profit opportunities every 30 seconds.",
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://hitbet.to/#website",
+                  name: "HitBet",
+                  url: "https://hitbet.to",
+                  publisher: { "@id": "https://hitbet.to/#organization" },
+                },
+              ],
+            }),
+          }}
+        />
         <Providers>
           <div className="bgGlow" aria-hidden />
           <div className="bgNoise" aria-hidden />
