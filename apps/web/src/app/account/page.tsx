@@ -289,12 +289,12 @@ export default function AccountPage() {
           <div style={s.upsellCard}>
             <div style={s.upsellTitle}>Start your free trial</div>
             <div style={s.upsellSub}>
-              7 days free, card required. Access the full live arb feed with
+              24 hours free, card required. Access the full live arb feed with
               execution cards and stake splits.
             </div>
             <div style={s.actions}>
               <Link href="/pricing" style={s.btnP}>
-                Try free — 7 days
+                Try free — 24 hours
               </Link>
             </div>
           </div>

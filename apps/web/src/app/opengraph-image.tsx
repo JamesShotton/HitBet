@@ -153,7 +153,7 @@ export default async function Image() {
                 color: "white",
               }}
             >
-              Try free — 7 days
+              Try free — 24 hours
             </div>
           </div>
         </div>

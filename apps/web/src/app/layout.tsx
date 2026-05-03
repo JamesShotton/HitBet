@@ -27,7 +27,7 @@ export const metadata = {
     url: "https://hitbet.to",
     title: "HitBet — Live Arbitrage Betting Feed",
     description:
-      "Scan 40+ sportsbooks in real time. Find guaranteed profit arbitrage opportunities with exact stake splits. Try free for 7 days.",
+      "Scan 40+ sportsbooks in real time. Find guaranteed profit arbitrage opportunities with exact stake splits. Try free for 24 hours.",
     siteName: "HitBet",
     images: [
       {

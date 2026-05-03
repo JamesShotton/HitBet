@@ -2668,7 +2668,7 @@ export default function ArbitragePage() {
                 No active subscription
               </div>
               <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>
-                Start a 7-day free trial. Card required.
+                Start a 24-hour free trial. Card required.
               </div>
             </div>
             <Link
@@ -2687,7 +2687,7 @@ export default function ArbitragePage() {
                 textDecoration: "none",
               }}
             >
-              Try free — 7 days
+              Try free — 24 hours
             </Link>
           </div>
         )}
