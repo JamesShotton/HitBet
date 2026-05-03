@@ -14,7 +14,6 @@ export default function NavBar() {
         <div className="logoDot" />
         <div className="brandText">
           <div className="brand">HitBet</div>
-          <div className="tag">Cyber-clarity • Execution-ready</div>
         </div>
       </Link>
 

@@ -346,7 +346,7 @@ export default function AccountPage() {
         {hasAccess && info?.plan === "arbitrage" && (
           <div style={s.upgradeCard}>
             <div>
-              <div style={s.upgradeTitle}>Add Long Run — £59.99/mo</div>
+              <div style={s.upgradeTitle}>Add Long Run — £14.99/wk</div>
               <div style={s.upgradeSub}>
                 Unlock value bets, Telegram alerts and 3-way arbs alongside your
                 arb feed.
@@ -362,7 +362,7 @@ export default function AccountPage() {
         {hasAccess && info?.plan === "longrun" && (
           <div style={s.upgradeCard}>
             <div>
-              <div style={s.upgradeTitle}>Add Arbitrage — £39.99/mo</div>
+              <div style={s.upgradeTitle}>Add Arbitrage — £9.99/wk</div>
               <div style={s.upgradeSub}>
                 Add the live guaranteed arb feed with step-by-step placement
                 cards.
