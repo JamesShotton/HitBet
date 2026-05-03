@@ -1,5 +1,5 @@
 const ODDS_API_KEY = process.env.ODDS_API_KEY!;
-const REGIONS = process.env.ODDS_REGIONS ?? "uk";
+const REGIONS = process.env.ODDS_REGIONS ?? "uk,eu";
 
 export type OddsOutcome = {
   name: string;

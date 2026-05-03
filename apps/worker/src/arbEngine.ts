@@ -4,41 +4,13 @@ import { ArbRow } from "./db.js";
 const TOTAL_STAKE = Number(process.env.TOTAL_STAKE ?? 50);
 
 
-// UK-licensed bookmakers only. Excludes EU/offshore books UK users can't access
-// (Bwin, Betclic, Marathon Bet, Pinnacle, FanDuel, DraftKings, Tipico, etc.)
-const UK_BOOKS = new Set([
-  // Exchanges — never restrict winning customers
-  "Betfair Exchange",
-  "Betfair",
-  "Smarkets",
-  "Matchbook",
-  "Betdaq",
-  // Major UK-licensed soft books
-  "Bet365",
-  "William Hill",
-  "Coral",
-  "Ladbrokes",
-  "Paddy Power",
-  "Sky Bet",
-  "Betway",
-  "Unibet (UK)",
-  "Unibet",
-  "888sport",
-  "BetVictor",
-  "BoyleSports",
-  "Betfred",
-  "Casumo",
-  "LeoVegas",
-  "Mr Green",
-  "Virgin Bet",
-  "Grosvenor",
-  "BetUK",
-  "QuinnBet",
-  "Midnite",
-  "Tote",
-  "SportNation",
-  "10Bet",
-  "NetBet",
+// US-only and Australian-only books — inaccessible to UK users
+// Everything else (UK, EU, Pinnacle, Bwin, Marathon Bet etc.) is kept
+const BLOCKED_BOOKS = new Set([
+  "FanDuel", "DraftKings", "BetMGM", "Caesars", "SuperBook",
+  "WynnBET", "PointsBet", "BetRivers", "Hard Rock Bet", "Fanatics",
+  "ESPN Bet", "SugarHouse", "Bet105", "Unibet (US)",
+  "TAB", "Neds", "Sportsbet", "Palmerbet", "Bluebet",
 ]);
 
 // ─────────────────────────────────────────────────────────────
@@ -84,7 +56,7 @@ function bestByKey(
 ): Record<string, BP> {
   const best: Record<string, BP> = {};
   for (const book of bookmakers) {
-    if (!UK_BOOKS.has(book.title)) continue;
+    if (BLOCKED_BOOKS.has(book.title)) continue;
     const market = book.markets.find(m => m.key === marketKey);
     if (!market) continue;
     for (const o of market.outcomes) {
