@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const FLAT_COMMISSION = 15;
+const FLAT_COMMISSION = 7.50;
 const RECURRING_RATE = 0.10;
 const fmt = (v: number) => `£${v.toFixed(2)}`;
 
