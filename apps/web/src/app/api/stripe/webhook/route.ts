@@ -129,16 +129,17 @@ export async function POST(req: Request) {
           ]
         );
 
-        // ── Flat £25 affiliate commission on every signup ──────────────────
+        // ── Flat £25 affiliate commission — only on direct paid signup (not trial) ──
+        // Trial signups: £25 fires on first successful payment instead (see invoice handler)
         const refCode = session.metadata?.ref_code;
-        if (refCode) {
+        if (refCode && !isTrial) {
           await recordAffiliateConversion({
             refCode,
             referredEmail: email,
             plan,
             saleAmount: FLAT_COMMISSION,
             commission: FLAT_COMMISSION,
-            isTrial,
+            isTrial: false,
             commissionType: "flat",
             stripeSessionId: session.id,
             stripeSubscriptionId:
@@ -176,9 +177,28 @@ export async function POST(req: Request) {
       if (!customerEmail) return new Response("ok", { status: 200 });
 
       const amountPaid = (invoice.amount_paid ?? 0) / 100;
-      const commission = Math.round(amountPaid * RECURRING_RATE * 100) / 100;
       const plan = subscription.metadata?.plan ?? "unknown";
 
+      // If no flat commission exists yet for this subscription, the trial just converted —
+      // pay the £25 now that we know they're a real paying customer
+      const flatExists = await pool.query(
+        `SELECT id FROM referral_conversions WHERE stripe_subscription_id = $1 AND commission_type = 'flat' LIMIT 1`,
+        [subscriptionId]
+      );
+      if (flatExists.rows.length === 0) {
+        await pool.query(
+          `INSERT INTO referral_conversions
+             (ref_code, referred_email, plan, sale_amount, commission, is_trial,
+              commission_type, stripe_session_id, stripe_subscription_id)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+           ON CONFLICT (stripe_session_id) DO NOTHING`,
+          [refCode, customerEmail, plan, FLAT_COMMISSION, FLAT_COMMISSION, false,
+           "flat", `trial_converted_${subscriptionId}`, subscriptionId]
+        );
+      }
+
+      // 10% recurring commission on every cycle payment
+      const commission = Math.round(amountPaid * RECURRING_RATE * 100) / 100;
       await recordAffiliateConversion({
         refCode,
         referredEmail: customerEmail,
