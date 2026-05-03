@@ -296,15 +296,18 @@ export default function AffiliatePage() {
                 marginBottom: 28,
               }}
             >
-              <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", marginBottom: 10 }}>
-                PAYOUT EMAIL (PayPal / bank)
+              <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", marginBottom: 4 }}>
+                PAYOUT DETAILS
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 12 }}>
+                PayPal email, bank account, Revolut, or any payment details you want us to send to.
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <input
-                  type="email"
+                  type="text"
                   value={payoutEmail}
                   onChange={(e) => setPayoutEmail(e.target.value)}
-                  placeholder="your@email.com"
+                  placeholder="e.g. your@paypal.com or sort code / account number"
                   style={{
                     flex: 1,
                     minWidth: 200,
@@ -334,9 +337,6 @@ export default function AffiliatePage() {
                 >
                   {savingPayout ? "Saving…" : "Save"}
                 </button>
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 8 }}>
-                We'll send payouts here once you request them.
               </div>
             </div>
 
