@@ -21,7 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: "https://hitbet.to/dashboard",
+      url: "https://hitbet.to/arbitrage",
       lastModified: new Date(),
       changeFrequency: "always",
       priority: 0.7,

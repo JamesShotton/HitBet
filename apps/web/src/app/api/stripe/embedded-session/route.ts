@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       ui_mode: "embedded",
       customer_email: session.user.email,
       line_items: [{ price: priceId, quantity: 1 }],
-      return_url: `${appUrl}/dashboard?checkout=success`,
+      return_url: `${appUrl}/arbitrage?checkout=success`,
       metadata: {
         user_email: session.user.email,
         plan,

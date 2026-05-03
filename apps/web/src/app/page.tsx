@@ -525,7 +525,7 @@ export default function Home() {
               </motion.div>
               <motion.div whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 400, damping: 25 }}>
                 <Link
-                  href="/dashboard"
+                  href="/arbitrage"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -1391,7 +1391,7 @@ export default function Home() {
               </motion.div>
               <motion.div whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 400, damping: 25 }}>
                 <Link
-                  href="/dashboard"
+                  href="/arbitrage"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",

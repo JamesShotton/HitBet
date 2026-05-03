@@ -271,8 +271,8 @@ export default function GuidePage() {
               </div>
             </div>
             <div style={g.ctaBtns}>
-              <Link href="/dashboard" style={g.btnP}>
-                Open dashboard
+              <Link href="/arbitrage" style={g.btnP}>
+                Open arbitrage
               </Link>
               <Link href="/pricing" style={g.btnG}>
                 View plans

@@ -23,8 +23,8 @@ export default function NavBar() {
         <Link className="navLink" href="/">
           Home
         </Link>
-        <Link className="navLink" href="/dashboard">
-          Dashboard
+        <Link className="navLink" href="/arbitrage">
+          Arbitrage
         </Link>
         <Link className="navLink" href="/long-run">
           Long Run
@@ -57,10 +57,10 @@ export default function NavBar() {
           </Link>
           <Link
             className="mobileLink"
-            href="/dashboard"
+            href="/arbitrage"
             onClick={() => setOpen(false)}
           >
-            Dashboard
+            Arbitrage
           </Link>
           <Link
             className="mobileLink"

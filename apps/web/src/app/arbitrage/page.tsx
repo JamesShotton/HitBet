@@ -1386,7 +1386,7 @@ function TutorialModal({ onClose }: { onClose: (dontShow: boolean) => void }) {
   );
 }
 
-export default function DashboardPage() {
+export default function ArbitragePage() {
   const mob = useIsMobile();
   const [arbs2, setArbs2] = useState<Arb[]>([]);
   const [arbs3, setArbs3] = useState<Arb[]>([]);

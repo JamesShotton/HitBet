@@ -28,8 +28,8 @@ export default function LoginPage() {
               Signed in as <b>{data.user.email}</b>
             </p>
             <div className="row" style={{ marginTop: 12 }}>
-              <Link className="btn primary" href="/dashboard">
-                Go to dashboard
+              <Link className="btn primary" href="/arbitrage">
+                Go to arbitrage
               </Link>
               <Link className="btn" href="/account">
                 Account

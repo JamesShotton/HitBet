@@ -376,8 +376,8 @@ export default function AccountPage() {
 
         {/* Quick links */}
         <div style={s.navLinks}>
-          <Link href="/dashboard" style={s.navLink}>
-            → Open dashboard
+          <Link href="/arbitrage" style={s.navLink}>
+            → Open arbitrage
           </Link>
           <Link href="/guide" style={s.navLink}>
             → Anti-ban guide
