@@ -3,6 +3,46 @@ import { ArbRow } from "./db.js";
 
 const TOTAL_STAKE = Number(process.env.TOTAL_STAKE ?? 50);
 
+// Minimum arb margin to show — filters out phantom arbs that vanish before placement
+const MIN_MARGIN = Number(process.env.MIN_ARB_MARGIN ?? 0.003); // 0.3%
+
+// UK-licensed bookmakers only. Excludes EU/offshore books UK users can't access
+// (Bwin, Betclic, Marathon Bet, Pinnacle, FanDuel, DraftKings, Tipico, etc.)
+const UK_BOOKS = new Set([
+  // Exchanges — never restrict winning customers
+  "Betfair Exchange",
+  "Betfair",
+  "Smarkets",
+  "Matchbook",
+  "Betdaq",
+  // Major UK-licensed soft books
+  "Bet365",
+  "William Hill",
+  "Coral",
+  "Ladbrokes",
+  "Paddy Power",
+  "Sky Bet",
+  "Betway",
+  "Unibet (UK)",
+  "Unibet",
+  "888sport",
+  "BetVictor",
+  "BoyleSports",
+  "Betfred",
+  "Casumo",
+  "LeoVegas",
+  "Mr Green",
+  "Virgin Bet",
+  "Grosvenor",
+  "BetUK",
+  "QuinnBet",
+  "Midnite",
+  "Tote",
+  "SportNation",
+  "10Bet",
+  "NetBet",
+]);
+
 // ─────────────────────────────────────────────────────────────
 // Maths
 // ─────────────────────────────────────────────────────────────
@@ -46,6 +86,7 @@ function bestByKey(
 ): Record<string, BP> {
   const best: Record<string, BP> = {};
   for (const book of bookmakers) {
+    if (!UK_BOOKS.has(book.title)) continue;
     const market = book.markets.find(m => m.key === marketKey);
     if (!market) continue;
     for (const o of market.outcomes) {
@@ -77,7 +118,7 @@ function h2h2(event: OddsEvent, marketKey = "h2h"): ArbRow | null {
   const { odds: o2, book: b2 } = best[n2];
   if (b1 === b2) return null;
   const m = margin2(o1, o2);
-  if (m <= 0) return null;
+  if (m < MIN_MARGIN) return null;
   const { sA, sB } = split2(o1, o2);
   return {
     event: `${event.home_team} vs ${event.away_team}`,
@@ -108,7 +149,7 @@ function h2h3(event: OddsEvent, marketKey = "h2h"): ArbRow | null {
   const { odds: oD, book: bD } = best[drawKey];
   const { odds: oA, book: bA } = best[awayKey];
   const m = margin3(oH, oD, oA);
-  if (m <= 0) return null;
+  if (m < MIN_MARGIN) return null;
   const { sA: sH, sB: sD, sC: sAway } = split3(oH, oD, oA);
   return {
     event: `${event.home_team} vs ${event.away_team}`,
@@ -152,7 +193,7 @@ function spreads(event: OddsEvent, marketKey = "spreads"): ArbRow[] {
       for (const p of poss) {
         if (n.book === p.book) continue;
         const m = margin2(n.odds, p.odds);
-        if (m <= 0) continue;
+        if (m < MIN_MARGIN) continue;
         const { sA, sB } = split2(n.odds, p.odds);
         arbs.push({
           event: `${event.home_team} vs ${event.away_team}`,
@@ -275,8 +316,8 @@ function playerProps(event: OddsEvent, marketKey: string): ArbRow[] {
 // Market groups — what to scan per sport
 // ─────────────────────────────────────────────────────────────
 
-// Featured markets (bulk /odds endpoint) — safe for all sports
-const FEATURED_MARKETS = ["h2h", "spreads", "totals", "alternate_spreads", "alternate_totals"];
+// Featured markets fetched from the bulk /odds endpoint
+const FEATURED_MARKETS = ["h2h", "spreads", "totals"];
 
 // Half-time / period markets — available for most sports
 const PERIOD_MARKETS: Record<string, string[]> = {

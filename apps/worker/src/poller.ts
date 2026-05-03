@@ -57,11 +57,6 @@ const TIER2_SPORTS = [
   "rugbyunion_six_nations",
   "cricket_international_t20",
   "cricket_ipl",
-  // US sports — duplicate intentional: us region adds FanDuel/DK cross-market arbs
-  "basketball_nba",
-  "baseball_mlb",
-  "icehockey_nhl",
-  "americanfootball_nfl",
 ];
 
 const BULK_MARKETS = ["h2h", "spreads", "totals"];
